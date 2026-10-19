@@ -14,6 +14,7 @@ export default function ClientHeader({ showClearButton, title }: ClientHeaderPro
             </Link>
             <h1 className="font-bold">{title}</h1>
             {showClearButton && <button className="text-red-600">{"Limpar"}</button>}
+            {showClearButton || <div />}
         </div>
     );
 }
