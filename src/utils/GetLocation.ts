@@ -9,12 +9,15 @@ export function useLocalizacao() {
 
   const reverterGeocodificacao = async (lat: number, lng: number) => {
     const resposta = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18&addressdetails=0`
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18&addressdetails=1`
     );
     if (!resposta.ok) throw new Error("Falha ao obter endereço.");
     const dados = await resposta.json();
     if (typeof dados.display_name !== "string") throw new Error("Endereço inválido.");
-    return dados.display_name;
+    return {
+      endereco: dados.display_name as string,
+      rua: (dados.address?.road ?? dados.address?.neighbourhood ?? null) as string | null,
+    };
   };
 
   const pegarLocalizacao = useCallback(() => {
@@ -32,10 +35,12 @@ export function useLocalizacao() {
         const { latitude, longitude } = posicao.coords;
         setCoordenadas({ lat: latitude, lng: longitude });
         try {
-          const enderecoCompleto = await reverterGeocodificacao(latitude, longitude);
-          setEndereco(enderecoCompleto);
+          const { endereco, rua } = await reverterGeocodificacao(latitude, longitude);
+          setEndereco(endereco);
+          setRua(rua);
         } catch {
           setEndereco(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+          setRua(null);
         }
         setCarregando(false);
       },

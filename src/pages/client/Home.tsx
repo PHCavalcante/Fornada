@@ -2,22 +2,43 @@ import location from "../../assets/location.svg";
 import { useEffect, useState } from 'react';
 import { useLocalizacao } from "../../utils/GetLocation";
 import { palette } from "../../theme";
-// import background from "../../assets/background.png";
+import background from "../../assets/background.png";
 import ClientMenu from "../../components/ClientMenu";
 
 export default function Home() {
   const { coordenadas, enderecoCompleto, rua, erro, carregando, pegarLocalizacao, buscarCep } = useLocalizacao();
   const [cep, setCep] = useState("");
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [usarCep, setUsarCep] = useState(false);
 
   useEffect(() => {
-    const checkPermission = async () => {
-      const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
-      setPermissionDenied(permissionStatus.state === 'denied');
+    let ativo = true;
+
+    const monitorarPermissao = async () => {
+      if (!("permissions" in navigator)) return;
+      try {
+        const status = await navigator.permissions.query({ name: "geolocation" as PermissionName });
+        if (!ativo) return;
+        setPermissionDenied(status.state === "denied");
+        status.addEventListener("change", () => {
+          if (!ativo) return;
+          setPermissionDenied(status.state === "denied");
+          if (status.state === "granted") pegarLocalizacao();
+        });
+      } catch {
+        // Navegador não expõe a consulta de permissão de geolocalização.
+      }
     };
-    checkPermission();
-    pegarLocalizacao();
-  }, []);
+
+    monitorarPermissao();
+    if ("geolocation" in navigator) pegarLocalizacao();
+
+    return () => {
+      ativo = false;
+    };
+  }, [pegarLocalizacao]);
+
+  const semLocalizacao = !coordenadas && !enderecoCompleto;
 
   if (carregando) {
     return (
@@ -26,30 +47,44 @@ export default function Home() {
       </div>
     );
   }
-  // console.log("Permission Denied:", permissionDenied);
-  // if (permissionDenied) {
-  //   return (
-  //     <div className="h-full w-full relative">
-  //       <img src={background} className="h-full w-full absolute z-0" alt="Background" />
-  //       <div className="flex flex-col h-full items-center justify-center z-10 relative">
-  //         <h1 className="font-bold mt-10.75">BEM VINDO</h1>
-  //         <div className="h-full flex flex-col items-center">
-  //           <img className="mt-32" src={location} width={56} height={79} alt="Ícone Localização" />
-  //           <div className="bg-white rounded-2xl p-4 mt-32 shadow-md text-center">
-  //             <h2 className="font-bold">Por favor, habilite o acesso a localização</h2>
-  //             <p>O acesso a localização é importante para descobrir padarias próximas a você</p>
-  //           </div>
-  //           <button onClick={() => pegarLocalizacao()} className="mt-auto mb-8 rounded-lg py-2 px-4 text-white cursor-pointer" style={{ backgroundColor: palette.light.accent }}>Permitir</button>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
 
-  if (erro && !enderecoCompleto) {
+  if (permissionDenied && !usarCep) {
+    return (
+      <div className="h-full w-full relative">
+        <img src={background} className="h-full w-full absolute z-0" alt="Background" />
+        <div className="flex flex-col h-full items-center justify-center z-10 relative">
+          <h1 className="font-bold mt-10.75">BEM VINDO</h1>
+          <div className="h-full flex flex-col items-center">
+            <img className="mt-32" src={location} width={56} height={79} alt="Ícone Localização" />
+            <div className="bg-white rounded-2xl p-4 mt-32 shadow-md text-center">
+              <h2 className="font-bold">Por favor, habilite o acesso a localização</h2>
+              <p>O acesso a localização é importante para descobrir padarias próximas a você</p>
+            </div>
+            <div className="mt-auto mb-8 flex flex-col items-center gap-3">
+              <button
+                onClick={() => pegarLocalizacao()}
+                className="rounded-lg py-2 px-4 text-white cursor-pointer"
+                style={{ backgroundColor: palette.light.accent }}
+              >
+                Permitir
+              </button>
+              <button
+                onClick={() => setUsarCep(true)}
+                className="rounded-lg py-2 px-4 underline cursor-pointer"
+              >
+                Usar meu CEP
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if ((erro || usarCep) && semLocalizacao) {
     return (
       <div className="flex flex-col h-full items-center justify-center px-6 gap-4">
-        <p className="text-center">{erro}</p>
+        {erro && <p className="text-center">{erro}</p>}
         <form
           className="flex flex-col gap-3 w-full max-w-xs"
           onSubmit={(e) => {
@@ -77,16 +112,12 @@ export default function Home() {
     );
   }
 
-  if (!coordenadas && !enderecoCompleto) {
+  if (semLocalizacao) {
     return (
       <div className="flex flex-col h-full items-center justify-center">
         <p>Localização não disponível.</p>
       </div>
     );
-  }
-
-  if (coordenadas) {
-    console.log(`Latitude: ${coordenadas.lat}, Longitude: ${coordenadas.lng}`);
   }
 
   return (
