@@ -1,8 +1,33 @@
 import logo from "../../assets/logo.png";
 import { palette } from "../../theme";
-import { Link } from "@tanstack/react-router"
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useState, type FormEvent } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { mensagemDeErro } from "../../utils/auth";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+
+  async function entrar(evento: FormEvent) {
+    evento.preventDefault();
+    setErro(null);
+    setEnviando(true);
+
+    try {
+      const profile = await signIn(email.trim(), password);
+      navigate({ to: profile.role === "owner" ? "/bakery/Dashboard" : "/", replace: true });
+    } catch (erroLogin) {
+      setErro(mensagemDeErro(erroLogin));
+      setEnviando(false);
+    }
+  }
+
   return (
      <div className="flex flex-col h-full items-center px-9.5">
       <div className="flex flex-col mt-9.5 items-center">
@@ -12,13 +37,17 @@ export default function Login() {
         </span>
       </div>
       <h1 className="text-2xl font-bold mt-10">Entrar</h1>
-      <div className="flex flex-col gap-4 mt-6">
+      <form className="flex flex-col gap-4 mt-6" onSubmit={entrar}>
         <div className="flex flex-col">
-          <label htmlFor="email">Email/CNPJ</label>
+          <label htmlFor="email">E-mail</label>
           <input
             id="email"
             name="email"
             type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
@@ -28,20 +57,27 @@ export default function Login() {
             id="password"
             name="password"
             type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
-      </div>
-      <button
-        className="w-80 h-12 text-white rounded-lg mt-6 hover:bg-blue-600 transition-colors"
-        style={{ backgroundColor: palette.light.accent }}
-      >
-        Entrar
-      </button>
+        {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
+        <button
+          type="submit"
+          disabled={enviando}
+          className="w-80 h-12 text-white rounded-lg mt-2 hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ backgroundColor: palette.light.accent }}
+        >
+          {enviando ? "Entrando..." : "Entrar"}
+        </button>
+      </form>
       <div className="mt-4 text-sm py-10">
         <span className="text-gray-600">Padaria não registrada? </span>
-        <Link to={"/bakery/register"} viewTransition>Registre-se</Link>
+        <Link to="/bakery/Register" viewTransition>Registre-se</Link>
       </div>
     </div>
-);
+  );
 }

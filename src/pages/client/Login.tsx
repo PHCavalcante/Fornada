@@ -1,10 +1,47 @@
 import logo from "../../assets/logo.png";
 import { palette } from "../../theme";
 import Separator from "../../components/Separator";
-import { supabase } from "../../utils/supabase";
 import googleIcon from "../../assets/google_icon.svg";
+import { useState, type FormEvent } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "../../contexts/AuthContext";
+import { mensagemDeErro } from "../../utils/auth";
 
 export default function Login() {
+  const navigate = useNavigate();
+  const { signIn, loginWithGoogle } = useAuth();
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [erro, setErro] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+
+  async function entrar(evento: FormEvent) {
+    evento.preventDefault();
+    setErro(null);
+    setEnviando(true);
+
+    try {
+      const profile = await signIn(email.trim(), password);
+      navigate({ to: profile.role === "owner" ? "/bakery/Dashboard" : "/", replace: true });
+    } catch (erroLogin) {
+      setErro(mensagemDeErro(erroLogin));
+      setEnviando(false);
+    }
+  }
+
+  async function entrarComGoogle() {
+    setErro(null);
+    setEnviando(true);
+
+    try {
+      await loginWithGoogle(`${window.location.origin}/client/`);
+    } catch (erroLogin) {
+      setErro(mensagemDeErro(erroLogin));
+      setEnviando(false);
+    }
+  }
+
   return (
     <div className="flex flex-col h-full items-center px-9.5">
       <div className="flex flex-col mt-9.5 items-center">
@@ -15,13 +52,17 @@ export default function Login() {
       </div>
       <h1 className="text-2xl font-bold mt-10">Bem-vindo de volta!</h1>
       <p className="text-gray-600 text-center mt-2.5">Faça login em sua conta</p>
-      <div className="flex flex-col gap-4 mt-6">
+      <form className="flex flex-col gap-4 mt-6" onSubmit={entrar}>
         <div className="flex flex-col">
           <label htmlFor="email">Email</label>
           <input
             id="email"
             name="email"
             type="email"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2 focus:ring-amber-200"
           />
         </div>
@@ -31,29 +72,38 @@ export default function Login() {
             id="password"
             name="password"
             type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
-      </div>
-      <button
-        className="w-80 h-12 text-white rounded-lg mt-6 hover:bg-blue-600 transition-colors"
-        style={{ backgroundColor: palette.light.accent }}
-      >
-        Entrar
-      </button>
+        {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
+        <button
+          type="submit"
+          disabled={enviando}
+          className="w-80 h-12 text-white rounded-lg mt-2 hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          style={{ backgroundColor: palette.light.accent }}
+        >
+          {enviando ? "Entrando..." : "Entrar"}
+        </button>
+      </form>
       <Separator />
       <button
-        className="flex mt-10 mb-20 items-center justify-center gap-3.75 w-80 h-12 rounded-lg border border-gray-500"
-        onClick={async () => await supabase.auth.signInWithOAuth({ provider: "google" })}
+        type="button"
+        disabled={enviando}
+        className="flex mt-10 mb-20 items-center justify-center gap-3.75 w-80 h-12 rounded-lg border border-gray-500 disabled:opacity-60"
+        onClick={entrarComGoogle}
       >
         <img src={googleIcon} alt="Login com o Google" />
         Entrar com Google
       </button>
       <div className="mt-4 text-sm">
         <span className="text-gray-600">Não possui conta? </span>
-        <a href="/client/register" className="font-semibold">
+        <Link to="/client/Register" className="font-semibold" viewTransition>
           Registre-se
-        </a>
+        </Link>
       </div>
     </div>
   );
