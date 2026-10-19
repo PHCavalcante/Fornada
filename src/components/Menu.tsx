@@ -34,7 +34,7 @@ export default function Menu() {
         className="flex min-w-76.5 h-screen flex-col items-center shadow-[4px_0px_4px_0px_#00000055]"
         >
         <img src={Logo} alt="Logo" width={150} className="mt-4" draggable={false} />
-        <span className="text-xl text-white">{"Placeholder"}</span>
+        <span className="text-xl text-white">{"FORNADA"}</span>
         <div className="mt-20">
             <Link to={"/bakery/Dashboard"} viewTransition style={{ backgroundColor: location.pathname === "/bakery/Dashboard" ? palette.light.primary : "transparent" }} className="flex w-61.5 items-center gap-3.5 text-white text-[20px] font-bold px-4 py-2 rounded-lg mb-4">
                 <img src={dashboardLogo} alt="Dashboard"/>
