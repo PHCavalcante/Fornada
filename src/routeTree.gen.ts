@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client/index'
 import { Route as ClientRegisterRouteImport } from './routes/client/Register'
+import { Route as ClientOrdersRouteImport } from './routes/client/Orders'
 import { Route as ClientLoginRouteImport } from './routes/client/Login'
 import { Route as ClientCartRouteImport } from './routes/client/Cart'
 import { Route as BakeryRegisterRouteImport } from './routes/bakery/Register'
@@ -34,6 +35,11 @@ const ClientIndexRoute = ClientIndexRouteImport.update({
 const ClientRegisterRoute = ClientRegisterRouteImport.update({
   id: '/client/Register',
   path: '/client/Register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientOrdersRoute = ClientOrdersRouteImport.update({
+  id: '/client/Orders',
+  path: '/client/Orders',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientLoginRoute = ClientLoginRouteImport.update({
@@ -87,6 +93,7 @@ export interface FileRoutesByFullPath {
   '/bakery/Register': typeof BakeryRegisterRoute
   '/client/Cart': typeof ClientCartRoute
   '/client/Login': typeof ClientLoginRoute
+  '/client/Orders': typeof ClientOrdersRoute
   '/client/Register': typeof ClientRegisterRoute
   '/client/': typeof ClientIndexRoute
 }
@@ -100,6 +107,7 @@ export interface FileRoutesByTo {
   '/bakery/Register': typeof BakeryRegisterRoute
   '/client/Cart': typeof ClientCartRoute
   '/client/Login': typeof ClientLoginRoute
+  '/client/Orders': typeof ClientOrdersRoute
   '/client/Register': typeof ClientRegisterRoute
   '/client': typeof ClientIndexRoute
 }
@@ -114,6 +122,7 @@ export interface FileRoutesById {
   '/bakery/Register': typeof BakeryRegisterRoute
   '/client/Cart': typeof ClientCartRoute
   '/client/Login': typeof ClientLoginRoute
+  '/client/Orders': typeof ClientOrdersRoute
   '/client/Register': typeof ClientRegisterRoute
   '/client/': typeof ClientIndexRoute
 }
@@ -129,6 +138,7 @@ export interface FileRouteTypes {
     | '/bakery/Register'
     | '/client/Cart'
     | '/client/Login'
+    | '/client/Orders'
     | '/client/Register'
     | '/client/'
   fileRoutesByTo: FileRoutesByTo
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/bakery/Register'
     | '/client/Cart'
     | '/client/Login'
+    | '/client/Orders'
     | '/client/Register'
     | '/client'
   id:
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/bakery/Register'
     | '/client/Cart'
     | '/client/Login'
+    | '/client/Orders'
     | '/client/Register'
     | '/client/'
   fileRoutesById: FileRoutesById
@@ -169,6 +181,7 @@ export interface RootRouteChildren {
   BakeryRegisterRoute: typeof BakeryRegisterRoute
   ClientCartRoute: typeof ClientCartRoute
   ClientLoginRoute: typeof ClientLoginRoute
+  ClientOrdersRoute: typeof ClientOrdersRoute
   ClientRegisterRoute: typeof ClientRegisterRoute
   ClientIndexRoute: typeof ClientIndexRoute
 }
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/client/Register'
       fullPath: '/client/Register'
       preLoaderRoute: typeof ClientRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client/Orders': {
+      id: '/client/Orders'
+      path: '/client/Orders'
+      fullPath: '/client/Orders'
+      preLoaderRoute: typeof ClientOrdersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client/Login': {
@@ -265,6 +285,7 @@ const rootRouteChildren: RootRouteChildren = {
   BakeryRegisterRoute: BakeryRegisterRoute,
   ClientCartRoute: ClientCartRoute,
   ClientLoginRoute: ClientLoginRoute,
+  ClientOrdersRoute: ClientOrdersRoute,
   ClientRegisterRoute: ClientRegisterRoute,
   ClientIndexRoute: ClientIndexRoute,
 }
