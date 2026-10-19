@@ -1,21 +1,28 @@
-export default function Step1Dados() {
+import type { StepProps } from "./types";
+import { PASSWORD_MIN_LENGTH } from "../../utils/auth";
+
+export default function Step1Dados({ form, update }: StepProps) {
     return (
         <div className="flex flex-col gap-4 mt-6">
            <div className="flex flex-col">
-          <label htmlFor="nomeDaPadaria">Nome da padaria</label>
+          <label htmlFor="name">Nome da padaria</label>
           <input
-            id="nomeDaPadaria"
-            name="nomeDaPadaria"
+            id="name"
+            name="name"
             type="text"
+            value={form.name}
+            onChange={(e) => update("name", e.target.value)}
             className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
          <div className="flex flex-col">
-          <label htmlFor="telefone">Telefone/Whatsapp</label>
+          <label htmlFor="phone">Telefone/Whatsapp</label>
           <input
-            id="telefone"
-            name="telefone"
+            id="phone"
+            name="phone"
             type="tel"
+            value={form.phone}
+            onChange={(e) => update("phone", e.target.value)}
             className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
@@ -25,6 +32,10 @@ export default function Step1Dados() {
             id="cnpj"
             name="cnpj"
             type="text"
+            inputMode="numeric"
+            placeholder="00.000.000/0000-00"
+            value={form.cnpj}
+            onChange={(e) => update("cnpj", e.target.value)}
             className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
@@ -34,6 +45,9 @@ export default function Step1Dados() {
             id="email"
             name="email"
             type="email"
+            autoComplete="email"
+            value={form.email}
+            onChange={(e) => update("email", e.target.value)}
             className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
@@ -43,6 +57,10 @@ export default function Step1Dados() {
             id="password"
             name="password"
             type="password"
+            autoComplete="new-password"
+            minLength={PASSWORD_MIN_LENGTH}
+            value={form.password}
+            onChange={(e) => update("password", e.target.value)}
             className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
@@ -52,6 +70,10 @@ export default function Step1Dados() {
             id="confirmPassword"
             name="confirmPassword"
             type="password"
+            autoComplete="new-password"
+            minLength={PASSWORD_MIN_LENGTH}
+            value={form.confirmPassword}
+            onChange={(e) => update("confirmPassword", e.target.value)}
             className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>

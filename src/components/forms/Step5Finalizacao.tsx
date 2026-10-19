@@ -1,4 +1,6 @@
-export default function Step5Finalizacao() {
+import type { StepProps } from "./types";
+
+export default function Step5Finalizacao({ form, update }: StepProps) {
     return (
         <div className="flex flex-col gap-4 mt-6">
             <div className="flex flex-col">
@@ -10,10 +12,11 @@ export default function Step5Finalizacao() {
                     className="w-80 h-12 rounded-lg bg-black text-white px-4 py-2"
                     title="Selecione o arquivo de logo da padaria"
                     accept="image/*"
-                    placeholder="Selecione o logo da padaria"
-                    required
-
+                    disabled
                 />
+                <span className="text-xs text-gray-600 mt-1">
+                    Upload de imagens disponível em breve.
+                </span>
             </div>
             <div className="flex flex-col">
                 <label htmlFor="bannerDaPadaria">Banner da padaria</label>
@@ -24,16 +27,17 @@ export default function Step5Finalizacao() {
                     className="w-80 h-12 rounded-lg bg-black text-white px-4 py-2"
                     title="Selecione o arquivo de banner da padaria"
                     accept="image/*"
-                    placeholder="Selecione o banner da padaria"
-                    required
+                    disabled
                 />
             </div>
             <div className="flex flex-col">
-                <label htmlFor="descricao">Descrição</label>
+                <label htmlFor="description">Descrição</label>
                 <input
-                    id="descricao"
-                    name="descricao"
+                    id="description"
+                    name="description"
                     type="text"
+                    value={form.description}
+                    onChange={(e) => update("description", e.target.value)}
                     className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
                 />
             </div>
