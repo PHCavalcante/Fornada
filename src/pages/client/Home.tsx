@@ -4,6 +4,8 @@ import { useLocalizacao } from "../../utils/GetLocation";
 import { palette } from "../../theme";
 import background from "../../assets/background.png";
 import ClientMenu from "../../components/ClientMenu";
+import { supabase } from "../../utils/supabase";
+import BakeryCard from "../../components/BakeryCard";
 
 export default function Home() {
   const { coordenadas, enderecoCompleto, rua, erro, carregando, pegarLocalizacao, buscarCep } = useLocalizacao();
@@ -120,6 +122,14 @@ export default function Home() {
     );
   }
 
+  // async function fetchPadariasProximas() {
+  //   const padarias = await supabase.from("bakeries").select("*");
+  //   console.log("padarias: ", padarias);
+  //   return padarias.data;
+  // }
+
+  // fetchPadariasProximas();
+
   return (
   <div className="flex flex-col h-full">
     <div className="flex items-center text-center pt-10 self-center gap-1.5 px-4">
@@ -127,14 +137,14 @@ export default function Home() {
       <p className="wrap-break-word">{rua ?? "Localização não disponível"}</p>
     </div>
 
-    {/* <div className="flex flex-col mx-5 my-auto gap-8 overflow-y-auto">
+    <div className="flex flex-col mx-5 my-auto gap-8 overflow-y-auto">
       <h1 className="text-lg font-bold">Padarias Próximas</h1>
       <div className="flex flex-col gap-6">
-        <BakeryCard />
-        <BakeryCard />
-        <BakeryCard />
+        <BakeryCard goTo="/client/bakery/teste1" />
+        <BakeryCard goTo="/client/bakery/teste2" />
+        <BakeryCard goTo="/client/bakery/teste3" />
       </div>
-    </div> */}
+    </div>
     <ClientMenu />
   </div>
   );
