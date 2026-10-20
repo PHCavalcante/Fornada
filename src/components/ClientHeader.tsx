@@ -4,11 +4,12 @@ import { Link } from "@tanstack/react-router";
 type ClientHeaderProps = {
     showClearButton?: boolean;
     title: string;
+    turnAbsolute?: boolean;
 };
 
-export default function ClientHeader({ showClearButton, title }: ClientHeaderProps) {
+export default function ClientHeader({ showClearButton, title, turnAbsolute }: ClientHeaderProps) {
     return (
-        <div className="flex items-center w-full justify-between px-6 py-4">
+        <div className="flex items-center w-full justify-between px-6 py-4 z-10" style={{ position: turnAbsolute ? "absolute" : "static" }}>
             <Link to="..">
                 <img src={back} width={18} height={16} alt="Botão Voltar" />
             </Link>
