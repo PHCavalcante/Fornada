@@ -1,8 +1,9 @@
 import locationIcon from '../../assets/location.svg';
 import { useState, type FormEvent } from 'react';
-import { useLocalizacao } from '../../utils/GetLocation';
-import { palette } from '../../theme';
+import BakeryCard from '../../components/BakeryCard';
 import ClientMenu from '../../components/ClientMenu';
+import { palette } from '../../theme';
+import { useLocalizacao } from '../../utils/GetLocation';
 
 export default function Home() {
   const {
@@ -91,7 +92,7 @@ export default function Home() {
         <img src={locationIcon} alt="" className="mt-1 h-5 w-5 shrink-0" />
         <div>
           <p className="wrap-break-word">{rua ?? enderecoCompleto}</p>
-          {/* {rua && <p className="mt-1 text-sm text-gray-500">{enderecoCompleto}</p>} */}
+          {rua && <p className="mt-1 text-sm text-gray-500">{enderecoCompleto}</p>}
           <button
             type="button"
             onClick={() => setEditandoLocalizacao(true)}
@@ -102,7 +103,15 @@ export default function Home() {
         </div>
       </div>
 
-      {/* O catálogo próximo será conectado ao banco nesta área. */}
+      <div className="mx-5 my-auto flex flex-col gap-8 overflow-y-auto">
+        <h1 className="text-lg font-bold">Padarias Próximas</h1>
+        <div className="flex flex-col gap-6">
+          <BakeryCard goTo="/client/bakery/teste1" />
+          <BakeryCard goTo="/client/bakery/teste2" />
+          <BakeryCard goTo="/client/bakery/teste3" />
+        </div>
+      </div>
+
       <ClientMenu />
     </div>
   );

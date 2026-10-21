@@ -22,6 +22,7 @@ import { Route as BakeryManagementRouteImport } from './routes/bakery/Management
 import { Route as BakeryLoginRouteImport } from './routes/bakery/Login'
 import { Route as BakeryDashboardRouteImport } from './routes/bakery/Dashboard'
 import { Route as BakeryCatalogRouteImport } from './routes/bakery/Catalog'
+import { Route as ClientBakeryBakeryRouteImport } from './routes/client/bakery/$bakery'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -88,6 +89,11 @@ const BakeryCatalogRoute = BakeryCatalogRouteImport.update({
   path: '/bakery/Catalog',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientBakeryBakeryRoute = ClientBakeryBakeryRouteImport.update({
+  id: '/client/bakery/$bakery',
+  path: '/client/bakery/$bakery',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/client/Profile': typeof ClientProfileRoute
   '/client/Register': typeof ClientRegisterRoute
   '/client/': typeof ClientIndexRoute
+  '/client/bakery/$bakery': typeof ClientBakeryBakeryRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/client/Profile': typeof ClientProfileRoute
   '/client/Register': typeof ClientRegisterRoute
   '/client': typeof ClientIndexRoute
+  '/client/bakery/$bakery': typeof ClientBakeryBakeryRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -134,6 +142,7 @@ export interface FileRoutesById {
   '/client/Profile': typeof ClientProfileRoute
   '/client/Register': typeof ClientRegisterRoute
   '/client/': typeof ClientIndexRoute
+  '/client/bakery/$bakery': typeof ClientBakeryBakeryRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +160,7 @@ export interface FileRouteTypes {
     | '/client/Profile'
     | '/client/Register'
     | '/client/'
+    | '/client/bakery/$bakery'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -166,6 +176,7 @@ export interface FileRouteTypes {
     | '/client/Profile'
     | '/client/Register'
     | '/client'
+    | '/client/bakery/$bakery'
   id:
     | '__root__'
     | '/'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/client/Profile'
     | '/client/Register'
     | '/client/'
+    | '/client/bakery/$bakery'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -197,6 +209,7 @@ export interface RootRouteChildren {
   ClientProfileRoute: typeof ClientProfileRoute
   ClientRegisterRoute: typeof ClientRegisterRoute
   ClientIndexRoute: typeof ClientIndexRoute
+  ClientBakeryBakeryRoute: typeof ClientBakeryBakeryRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -292,6 +305,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BakeryCatalogRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/client/bakery/$bakery': {
+      id: '/client/bakery/$bakery'
+      path: '/client/bakery/$bakery'
+      fullPath: '/client/bakery/$bakery'
+      preLoaderRoute: typeof ClientBakeryBakeryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -309,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientProfileRoute: ClientProfileRoute,
   ClientRegisterRoute: ClientRegisterRoute,
   ClientIndexRoute: ClientIndexRoute,
+  ClientBakeryBakeryRoute: ClientBakeryBakeryRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

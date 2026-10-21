@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import home from "../assets/home.svg";
 import orders from "../assets/orders.svg";
 import profile from "../assets/profile.svg";
+import search from "../assets/search.svg";
 import { useLocation } from "@tanstack/react-router";
 
 export default function ClientMenu() {
@@ -16,6 +17,10 @@ export default function ClientMenu() {
             <Link to="/client/orders" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === "/client/orders" ? "#000" : "#888" }}>
                 <img src={orders} width={20} className="invert" alt="Pedidos" style={{ opacity: location.pathname === "/client/orders" ? "100%" : "75%" }} />
                 Pedidos
+            </Link>
+             <Link to="/client/orders" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === "/client/orders" ? "#000" : "#888" }}>
+                <img src={search} width={20} alt="Pedidos" style={{ opacity: location.pathname === "/client/orders" ? "100%" : "75%" }} />
+                Busca
             </Link>
             {/* <Link to="/client/search">Busca</Link> */}
             <Link to="/client/profile" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === "/client/profile" ? "#000" : "#888" }}>
