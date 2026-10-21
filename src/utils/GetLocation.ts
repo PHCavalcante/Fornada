@@ -83,28 +83,35 @@ export function useLocalizacao() {
 
     return new Promise((resolve) => {
       navigator.geolocation.getCurrentPosition(
-        async (posicao) => {
+        (posicao) => {
           const { latitude, longitude } = posicao.coords;
-          let endereco = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
-          let rua: string | null = null;
-
-          try {
-            ({ endereco, rua } = await reverterGeocodificacao(latitude, longitude));
-          } catch {
-            // As coordenadas ainda identificam a localização mesmo sem o endereço textual.
-          }
-
-          const novaLocalizacao: LocalizacaoSalva = {
+          const localizacaoGps: LocalizacaoSalva = {
             origem: 'gps',
             coordenadas: { lat: latitude, lng: longitude },
-            endereco,
-            rua,
+            endereco: `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`,
+            rua: null,
             cep: null,
           };
-          salvarLocalizacao(novaLocalizacao);
-          setLocalizacao(novaLocalizacao);
+          salvarLocalizacao(localizacaoGps);
+          setLocalizacao(localizacaoGps);
           setCarregando(false);
           resolve(true);
+
+          // O ponto GPS já está salvo e disponível. O endereço é apenas um complemento.
+          void reverterGeocodificacao(latitude, longitude).then(({ endereco, rua }) => {
+            const salva = lerLocalizacaoSalva();
+            if (
+              salva?.origem !== 'gps' ||
+              salva.coordenadas?.lat !== latitude ||
+              salva.coordenadas?.lng !== longitude
+            ) return;
+
+            const localizacaoComEndereco = { ...localizacaoGps, endereco, rua };
+            salvarLocalizacao(localizacaoComEndereco);
+            setLocalizacao(localizacaoComEndereco);
+          }).catch(() => {
+            // As coordenadas continuam válidas mesmo se o serviço de endereço falhar.
+          });
         },
         (falha) => {
           const mensagens: Record<number, string> = {
@@ -134,7 +141,7 @@ export function useLocalizacao() {
       const resposta = await fetchComTimeout(`https://viacep.com.br/ws/${cep}/json/`);
       if (!resposta.ok) throw new Error('Falha na requisição.');
       const dados = await resposta.json();
-      if (dados.erro) throw new Error('CEP não encontrado.');
+      if (dados.erro === true) throw new Error('CEP não encontrado.');
 
       const partes = [dados.logradouro, dados.bairro, dados.localidade, dados.uf]
         .filter((parte): parte is string => typeof parte === 'string' && parte.length > 0);
@@ -149,12 +156,12 @@ export function useLocalizacao() {
 
       salvarLocalizacao(novaLocalizacao);
       setLocalizacao(novaLocalizacao);
-      setCarregando(false);
       return true;
     } catch {
       setErro('CEP não encontrado ou serviço indisponível. Verifique o número e tente novamente.');
-      setCarregando(false);
       return false;
+    } finally {
+      setCarregando(false);
     }
   }, []);
 
