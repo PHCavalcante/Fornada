@@ -1,85 +1,183 @@
 import { useCallback, useState } from 'react';
 
+type Coordenadas = { lat: number; lng: number };
+type LocalizacaoSalva = {
+  origem: 'gps' | 'cep';
+  coordenadas: Coordenadas | null;
+  endereco: string;
+  rua: string | null;
+  cep: string | null;
+};
+
+const CHAVE_LOCALIZACAO = 'tcc:localizacao-cliente:v1';
+
+async function fetchComTimeout(url: string, timeoutMs = 10000) {
+  const controlador = new AbortController();
+  const temporizador = window.setTimeout(() => controlador.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controlador.signal });
+  } finally {
+    window.clearTimeout(temporizador);
+  }
+}
+
+function lerLocalizacaoSalva(): LocalizacaoSalva | null {
+  try {
+    const valor = localStorage.getItem(CHAVE_LOCALIZACAO);
+    if (!valor) return null;
+
+    const localizacao: unknown = JSON.parse(valor);
+    if (
+      typeof localizacao !== 'object' || localizacao === null ||
+      !('endereco' in localizacao) || typeof localizacao.endereco !== 'string' ||
+      !('origem' in localizacao) || !['gps', 'cep'].includes(String(localizacao.origem))
+    ) return null;
+
+    return localizacao as LocalizacaoSalva;
+  } catch {
+    return null;
+  }
+}
+
+function salvarLocalizacao(localizacao: LocalizacaoSalva) {
+  try {
+    localStorage.setItem(CHAVE_LOCALIZACAO, JSON.stringify(localizacao));
+  } catch {
+    // A localização continua disponível nesta sessão mesmo se o navegador bloquear o armazenamento.
+  }
+}
+
 export function useLocalizacao() {
-  const [coordenadas, setCoordenadas] = useState<{lat: number, lng: number} | null>(null);
-  const [enderecoCompleto, setEndereco] = useState<string | null>(null);
-  const [rua, setRua] = useState<string | null>(null);
+  const [localizacao, setLocalizacao] = useState<LocalizacaoSalva | null>(lerLocalizacaoSalva);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(false);
 
   const reverterGeocodificacao = async (lat: number, lng: number) => {
-    const resposta = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18&addressdetails=1`
+    const resposta = await fetchComTimeout(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&zoom=18&addressdetails=1`,
     );
-    if (!resposta.ok) throw new Error("Falha ao obter endereço.");
+    if (!resposta.ok) throw new Error('Falha ao obter endereço.');
     const dados = await resposta.json();
-    if (typeof dados.display_name !== "string") throw new Error("Endereço inválido.");
+    if (typeof dados.display_name !== 'string') throw new Error('Endereço inválido.');
     return {
       endereco: dados.display_name as string,
       rua: (dados.address?.road ?? dados.address?.neighbourhood ?? null) as string | null,
     };
   };
 
-  const pegarLocalizacao = useCallback(() => {
+  const pegarLocalizacao = useCallback((): Promise<boolean> => {
     setCarregando(true);
     setErro(null);
-    console.log("Iniciando obtenção de localização...");
-    if (!("geolocation" in navigator)) {
-      setErro("Seu navegador não suporta geolocalização.");
+
+    if (!window.isSecureContext) {
+      setErro('A localização automática exige uma conexão segura (HTTPS). Você pode informar seu CEP.');
       setCarregando(false);
-      return;
+      return Promise.resolve(false);
     }
 
-    navigator.geolocation.getCurrentPosition(
-      async (posicao) => {
-        const { latitude, longitude } = posicao.coords;
-        setCoordenadas({ lat: latitude, lng: longitude });
-        try {
-          const { endereco, rua } = await reverterGeocodificacao(latitude, longitude);
-          setEndereco(endereco);
-          setRua(rua);
-        } catch {
-          setEndereco(`${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-          setRua(null);
-        }
-        setCarregando(false);
-      },
-      () => {
-        setErro("Não foi possível obter a localização automaticamente. Digite seu CEP.");
-        setCarregando(false);
-      },
-      { 
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
-    );
+    if (!('geolocation' in navigator)) {
+      setErro('Este navegador não oferece localização automática. Você pode informar seu CEP.');
+      setCarregando(false);
+      return Promise.resolve(false);
+    }
+
+    return new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(
+        async (posicao) => {
+          const { latitude, longitude } = posicao.coords;
+          let endereco = `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+          let rua: string | null = null;
+
+          try {
+            ({ endereco, rua } = await reverterGeocodificacao(latitude, longitude));
+          } catch {
+            // As coordenadas ainda identificam a localização mesmo sem o endereço textual.
+          }
+
+          const novaLocalizacao: LocalizacaoSalva = {
+            origem: 'gps',
+            coordenadas: { lat: latitude, lng: longitude },
+            endereco,
+            rua,
+            cep: null,
+          };
+          salvarLocalizacao(novaLocalizacao);
+          setLocalizacao(novaLocalizacao);
+          setCarregando(false);
+          resolve(true);
+        },
+        (falha) => {
+          const mensagens: Record<number, string> = {
+            1: 'O acesso à localização foi negado. Libere a permissão no navegador ou informe seu CEP.',
+            2: 'O dispositivo não conseguiu determinar sua localização. Tente novamente ou informe seu CEP.',
+            3: 'A localização demorou para responder. Tente novamente ou informe seu CEP.',
+          };
+          setErro(mensagens[falha.code] ?? 'Não foi possível obter sua localização. Você pode informar seu CEP.');
+          setCarregando(false);
+          resolve(false);
+        },
+        { enableHighAccuracy: false, timeout: 20000, maximumAge: 600000 },
+      );
+    });
   }, []);
 
-  const buscarCep = useCallback(async (cep: string) => {
-    const cepLimpo = cep.replace(/\D/g, "");
-    if (cepLimpo.length !== 8) {
-      setErro("CEP inválido. Digite os 8 dígitos do CEP.");
-      return;
+  const buscarCep = useCallback(async (cepInformado: string): Promise<boolean> => {
+    const cep = cepInformado.replace(/\D/g, '');
+    if (cep.length !== 8) {
+      setErro('CEP inválido. Digite os 8 dígitos do CEP.');
+      return false;
     }
+
     setCarregando(true);
     setErro(null);
     try {
-      const resposta = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-      if (!resposta.ok) throw new Error("Falha na requisição.");
+      const resposta = await fetchComTimeout(`https://viacep.com.br/ws/${cep}/json/`);
+      if (!resposta.ok) throw new Error('Falha na requisição.');
       const dados = await resposta.json();
-      if (dados.erro) throw new Error("CEP não encontrado.");
+      if (dados.erro) throw new Error('CEP não encontrado.');
+
       const partes = [dados.logradouro, dados.bairro, dados.localidade, dados.uf]
-        .filter(Boolean)
-        .join(", ");
-      setEndereco(`${partes} - CEP ${dados.cep}`);
-      setRua(dados.logradouro);
-      setCoordenadas(null);
+        .filter((parte): parte is string => typeof parte === 'string' && parte.length > 0);
+      const endereco = `${partes.join(', ')}${partes.length ? ' — ' : ''}CEP ${dados.cep ?? cep}`;
+      const novaLocalizacao: LocalizacaoSalva = {
+        origem: 'cep',
+        coordenadas: null,
+        endereco,
+        rua: typeof dados.logradouro === 'string' && dados.logradouro ? dados.logradouro : null,
+        cep,
+      };
+
+      salvarLocalizacao(novaLocalizacao);
+      setLocalizacao(novaLocalizacao);
+      setCarregando(false);
+      return true;
     } catch {
-      setErro("CEP não encontrado. Verifique e tente novamente.");
+      setErro('CEP não encontrado ou serviço indisponível. Verifique o número e tente novamente.');
+      setCarregando(false);
+      return false;
     }
-    setCarregando(false);
   }, []);
 
-  return { coordenadas, enderecoCompleto, rua, erro, carregando, pegarLocalizacao, buscarCep };
+  const limparLocalizacao = useCallback(() => {
+    try {
+      localStorage.removeItem(CHAVE_LOCALIZACAO);
+    } catch {
+      // A tela ainda pode reiniciar a localização nesta sessão.
+    }
+    setLocalizacao(null);
+    setErro(null);
+  }, []);
+
+  return {
+    coordenadas: localizacao?.coordenadas ?? null,
+    enderecoCompleto: localizacao?.endereco ?? null,
+    rua: localizacao?.rua ?? null,
+    cepSalvo: localizacao?.cep ?? null,
+    origem: localizacao?.origem ?? null,
+    erro,
+    carregando,
+    pegarLocalizacao,
+    buscarCep,
+    limparLocalizacao,
+  };
 }
