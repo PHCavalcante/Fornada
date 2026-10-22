@@ -1,35 +1,111 @@
-import Menu from "../../components/Menu"
-import { palette } from "../../theme";
-import { useAuth } from "../../contexts/AuthContext";
+import { useCallback, useEffect, useState } from 'react'
+import Menu from '../../components/Menu'
+import { useAuth } from '../../contexts/AuthContext'
+import { palette } from '../../theme'
+import { buscarResumoDashboard, type ResumoDashboardPadaria } from '../../utils/bakeryDashboard'
+
+const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function Dashboard() {
-  const { profile } = useAuth();
+  const { profile } = useAuth()
+  const [resumo, setResumo] = useState<ResumoDashboardPadaria | null>(null)
+  const [carregando, setCarregando] = useState(true)
+  const [atualizando, setAtualizando] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+
+  const carregarResumo = useCallback(async (silencioso = false) => {
+    if (!profile?.id) return
+    if (silencioso) setAtualizando(true)
+    else setCarregando(true)
+    setErro(null)
+    try {
+      setResumo(await buscarResumoDashboard(profile.id))
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : 'Não foi possível carregar o dashboard.')
+    } finally {
+      setCarregando(false)
+      setAtualizando(false)
+    }
+  }, [profile?.id])
+
+  useEffect(() => {
+    void carregarResumo()
+  }, [carregarResumo])
+
+  const metricas = resumo ? [
+    {
+      titulo: 'Faturamento de pedidos entregues',
+      valor: moeda.format(resumo.faturamentoEntregue),
+      descricao: 'Últimos 30 dias',
+      destaque: true,
+    },
+    {
+      titulo: 'Pedidos entregues',
+      valor: String(resumo.pedidosEntregues),
+      descricao: 'Últimos 30 dias',
+    },
+    {
+      titulo: 'Pedidos em andamento',
+      valor: String(resumo.pedidosEmAndamento),
+      descricao: 'Aguardando ou em preparo/entrega',
+    },
+    {
+      titulo: 'Pedidos cancelados',
+      valor: String(resumo.pedidosCancelados),
+      descricao: 'Últimos 30 dias',
+    },
+  ] : []
 
   return (
-    <div className="flex">
+    <div className="flex min-h-screen">
       <Menu />
-      <div className="flex flex-col ml-14.75">
-        <h1 className="font-bold text-3xl mt-11.25 mb-4" style={{ color: palette.light.accent }}>Dashboard</h1>
-        {profile && <p className="mb-16 text-gray-700">Bem-vindo, {profile.full_name}</p>}
-        <div className="flex gap-11.75">
-          <div style={{ backgroundColor: palette.light.accent }} className="flex min-w-51.25 flex-col items-center gap-4 p-4 rounded-lg h-fit text-white text-[20px] font-bold mr-14.75 shadow-[0px_4px_4px_0px_#00000055]">
-            <p className="text-[24px]">Lucro total</p>
-            <p className="text-[32px]">{`R$ 0,00`}</p>
+      <main className="flex w-full flex-col px-6 pb-10 sm:ml-8 sm:px-10 lg:ml-14.75">
+        <header className="mt-10 flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold" style={{ color: palette.light.accent }}>Dashboard</h1>
+            {resumo && <p className="mt-1 text-gray-600">{resumo.padariaNome}</p>}
+            {profile && <p className="mt-2 text-gray-700">Bem-vindo, {profile.full_name}</p>}
           </div>
-          <div style={{ backgroundColor: palette.light.accent }} className="flex flex-col items-center gap-2 p-4 rounded-lg h-fit text-white text-[14px] font-bold shadow-[0px_4px_4px_0px_#00000055]">
-            <p>Pedidos entregues</p>
-            <p className="text-[20px]">{`0`}</p>
-          </div>
-          <div style={{ backgroundColor: palette.light.accent }} className="flex flex-col items-center gap-2 p-4 rounded-lg h-fit text-white text-[14px] font-bold shadow-[0px_4px_4px_0px_#00000055]">
-            <p>Pedidos em espera</p>
-            <p className="text-[20px]">{`0`}</p>
-          </div>
-          <div style={{ backgroundColor: palette.light.accent }} className="flex flex-col items-center gap-2 p-4 rounded-lg h-fit text-white text-[14px] font-bold shadow-[0px_4px_4px_0px_#00000055]">
-            <p>Pedidos cancelados</p>
-            <p className="text-[20px]">{`0`}</p>
-          </div>
-        </div>
-      </div>
+          <button
+            type="button"
+            onClick={() => void carregarResumo(true)}
+            disabled={atualizando || carregando}
+            className="rounded-lg border border-gray-300 px-4 py-2 disabled:opacity-50"
+          >
+            {atualizando ? 'Atualizando...' : 'Atualizar dados'}
+          </button>
+        </header>
+
+        {erro && <p role="alert" className="mt-6 rounded-lg bg-red-50 p-3 text-red-700">{erro}</p>}
+
+        {carregando ? (
+          <p className="mt-10 text-gray-600">Carregando dados...</p>
+        ) : !resumo ? (
+          <section className="mt-10 rounded-lg bg-white p-6 shadow-sm">
+            <h2 className="font-bold">Nenhuma padaria vinculada à sua conta</h2>
+            <p className="mt-2 text-gray-600">Conclua o cadastro da padaria para ver os indicadores.</p>
+          </section>
+        ) : (
+          <>
+            <p className="mt-8 text-sm text-gray-600">
+              Entregas e cancelamentos consideram a data da mudança de status. Pedidos cancelados não entram no faturamento.
+            </p>
+            <section aria-label="Resumo dos pedidos" className="mt-4 grid gap-4 sm:grid-cols-2 2xl:grid-cols-4">
+              {metricas.map((metrica) => (
+                <article
+                  key={metrica.titulo}
+                  className="flex min-h-36 flex-col justify-between rounded-xl p-5 text-white shadow-[0px_4px_4px_0px_#00000030]"
+                  style={{ backgroundColor: metrica.destaque ? palette.light.accent : palette.light.primary }}
+                >
+                  <h2 className="font-semibold">{metrica.titulo}</h2>
+                  <p className="mt-3 text-3xl font-bold">{metrica.valor}</p>
+                  <p className="mt-2 text-sm text-white/90">{metrica.descricao}</p>
+                </article>
+              ))}
+            </section>
+          </>
+        )}
+      </main>
     </div>
-  );
+  )
 }
