@@ -1,32 +1,30 @@
-import { Link } from "@tanstack/react-router";
-import home from "../assets/home.svg";
-import orders from "../assets/orders.svg";
-import profile from "../assets/profile.svg";
-import search from "../assets/search.svg";
-import { useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from '@tanstack/react-router'
+import home from '../assets/home.svg'
+import orders from '../assets/orders.svg'
+import profile from '../assets/profile.svg'
+import search from '../assets/search.svg'
 
 export default function ClientMenu() {
-    const location = useLocation();
+  const location = useLocation()
 
-    return (
-        <div className="flex w-full items-center mt-auto justify-between px-4 py-2">
-            <Link to="/" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === "/" ? "#000" : "#888" }}>
-                <img src={home} alt="Início"/>
-                Home
-            </Link>
-            <Link to="/client/orders" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === "/client/orders" ? "#000" : "#888" }}>
-                <img src={orders} width={20} className="invert" alt="Pedidos" style={{ opacity: location.pathname === "/client/orders" ? "100%" : "75%" }} />
-                Pedidos
-            </Link>
-             <Link to="/client/orders" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === "/client/orders" ? "#000" : "#888" }}>
-                <img src={search} width={20} alt="Pedidos" style={{ opacity: location.pathname === "/client/orders" ? "100%" : "75%" }} />
-                Busca
-            </Link>
-            {/* <Link to="/client/search">Busca</Link> */}
-            <Link to="/client/profile" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === "/client/profile" ? "#000" : "#888" }}>
-                <img src={profile} alt="Perfil" style={{ opacity: location.pathname === "/client/profile" ? "100%" : "75%" }} />
-                Perfil
-            </Link>
-        </div>
-    );
+  return (
+    <nav aria-label="Navegação do cliente" className="flex w-full shrink-0 items-center justify-between px-4 py-2">
+      <Link to="/" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === '/' ? '#000' : '#888' }}>
+        <img src={home} alt="" />
+        Início
+      </Link>
+      <Link to="/client/Orders" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === '/client/Orders' ? '#000' : '#888' }}>
+        <img src={orders} width={20} className="invert" alt="" />
+        Pedidos
+      </Link>
+      <Link to="/client/Search" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === '/client/Search' ? '#000' : '#888' }}>
+        <img src={search} width={20} alt="" />
+        Busca
+      </Link>
+      <Link to="/client/Profile" className="flex flex-col items-center" viewTransition style={{ color: location.pathname === '/client/Profile' ? '#000' : '#888' }}>
+        <img src={profile} alt="" style={{ opacity: location.pathname === '/client/Profile' ? '100%' : '75%' }} />
+        Perfil
+      </Link>
+    </nav>
+  )
 }

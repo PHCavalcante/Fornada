@@ -4,6 +4,7 @@ import BakeryCard from '../../components/BakeryCard';
 import ClientMenu from '../../components/ClientMenu';
 import { palette } from '../../theme';
 import { useLocalizacao } from '../../utils/GetLocation';
+import { buscarPadariasAbertas, type PadariaPublica } from '../../utils/clientCatalog';
 
 export default function Home() {
   const {
@@ -20,6 +21,26 @@ export default function Home() {
   const [cep, setCep] = useState(cepSalvo ?? '');
   const [editandoLocalizacao, setEditandoLocalizacao] = useState(!enderecoCompleto);
   const [detalhesLocalizacaoAbertos, setDetalhesLocalizacaoAbertos] = useState(false);
+  const [padarias, setPadarias] = useState<PadariaPublica[]>([]);
+  const [carregandoPadarias, setCarregandoPadarias] = useState(false);
+  const [erroPadarias, setErroPadarias] = useState<string | null>(null);
+  const latitude = coordenadas?.lat ?? null;
+  const longitude = coordenadas?.lng ?? null;
+
+  useEffect(() => {
+    if (!enderecoCompleto) return;
+    let ativo = true;
+    setCarregandoPadarias(true);
+    setErroPadarias(null);
+    const ponto = latitude !== null && longitude !== null ? { lat: latitude, lng: longitude } : null;
+    buscarPadariasAbertas(ponto)
+      .then((resultado) => { if (ativo) setPadarias(resultado) })
+      .catch((falha: unknown) => {
+        if (ativo) setErroPadarias(falha instanceof Error ? falha.message : 'Não foi possível carregar as padarias.')
+      })
+      .finally(() => { if (ativo) setCarregandoPadarias(false) });
+    return () => { ativo = false };
+  }, [enderecoCompleto, latitude, longitude]);
 
   useEffect(() => {
     if (!detalhesLocalizacaoAbertos) return;
@@ -101,7 +122,7 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-start justify-center gap-2 px-4 pt-10 text-center">
         <button
           type="button"
@@ -110,9 +131,7 @@ export default function Home() {
           className="flex items-center gap-2 mt-1 shrink-0 rounded focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           <img src={locationIcon} alt="" className="h-5 w-5" />
-        <div>
-          <p className="wrap-break-word">{rua ?? enderecoCompleto}</p>
-        </div>
+          <span className="wrap-break-word">{rua ?? enderecoCompleto}</span>
         </button>
       </div>
 
@@ -165,13 +184,32 @@ export default function Home() {
         </div>
       )}
 
-      <div className="mx-5 my-auto flex flex-col gap-8 overflow-y-auto">
-        <h1 className="text-lg font-bold">Padarias Próximas</h1>
-        <div className="flex flex-col gap-6">
-          <BakeryCard goTo="/client/bakery/teste1" />
-          <BakeryCard goTo="/client/bakery/teste2" />
-          <BakeryCard goTo="/client/bakery/teste3" />
-        </div>
+      <div className="mx-5 min-h-0 flex-1 overflow-y-auto py-6">
+        <h1 className="mb-4 text-lg font-bold mt-34">Padarias próximas</h1>
+        {/* {coordenadas === null && origem === 'cep' && (
+          <p className="mb-4 text-sm text-gray-600">Mostrando padarias abertas. Use o GPS para calcular distância e disponibilidade de entrega.</p>
+        )} */}
+        {erroPadarias && <p role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{erroPadarias}</p>}
+        {carregandoPadarias ? (
+          <p className="py-8 text-center text-gray-600">Buscando padarias...</p>
+        ) : padarias.length === 0 && !erroPadarias ? (
+          <p className="py-8 text-center text-gray-600">Nenhuma padaria aberta encontrada por enquanto.</p>
+        ) : (
+          <div className="flex flex-col gap-3 pb-4">
+            {padarias.map((padaria) => (
+              <BakeryCard
+                key={padaria.id}
+                id={padaria.id}
+                name={padaria.name}
+                address={`${padaria.street}, ${padaria.adress_number} · ${padaria.neighborhood}, ${padaria.city}`}
+                distanceKm={padaria.distance_km}
+                rating={Number(padaria.avg_rating)}
+                ratingCount={padaria.rating_count}
+                imageUrl={padaria.logo_url}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       <ClientMenu />

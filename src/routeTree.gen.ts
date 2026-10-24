@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ClientIndexRouteImport } from './routes/client/index'
+import { Route as ClientSearchRouteImport } from './routes/client/Search'
 import { Route as ClientRegisterRouteImport } from './routes/client/Register'
 import { Route as ClientProfileRouteImport } from './routes/client/Profile'
 import { Route as ClientOrdersRouteImport } from './routes/client/Orders'
@@ -32,6 +33,11 @@ const IndexRoute = IndexRouteImport.update({
 const ClientIndexRoute = ClientIndexRouteImport.update({
   id: '/client/',
   path: '/client/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientSearchRoute = ClientSearchRouteImport.update({
+  id: '/client/Search',
+  path: '/client/Search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientRegisterRoute = ClientRegisterRouteImport.update({
@@ -108,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/client/Orders': typeof ClientOrdersRoute
   '/client/Profile': typeof ClientProfileRoute
   '/client/Register': typeof ClientRegisterRoute
+  '/client/Search': typeof ClientSearchRoute
   '/client/': typeof ClientIndexRoute
   '/client/bakery/$bakery': typeof ClientBakeryBakeryRoute
 }
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/client/Orders': typeof ClientOrdersRoute
   '/client/Profile': typeof ClientProfileRoute
   '/client/Register': typeof ClientRegisterRoute
+  '/client/Search': typeof ClientSearchRoute
   '/client': typeof ClientIndexRoute
   '/client/bakery/$bakery': typeof ClientBakeryBakeryRoute
 }
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/client/Orders': typeof ClientOrdersRoute
   '/client/Profile': typeof ClientProfileRoute
   '/client/Register': typeof ClientRegisterRoute
+  '/client/Search': typeof ClientSearchRoute
   '/client/': typeof ClientIndexRoute
   '/client/bakery/$bakery': typeof ClientBakeryBakeryRoute
 }
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/client/Orders'
     | '/client/Profile'
     | '/client/Register'
+    | '/client/Search'
     | '/client/'
     | '/client/bakery/$bakery'
   fileRoutesByTo: FileRoutesByTo
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/client/Orders'
     | '/client/Profile'
     | '/client/Register'
+    | '/client/Search'
     | '/client'
     | '/client/bakery/$bakery'
   id:
@@ -191,6 +202,7 @@ export interface FileRouteTypes {
     | '/client/Orders'
     | '/client/Profile'
     | '/client/Register'
+    | '/client/Search'
     | '/client/'
     | '/client/bakery/$bakery'
   fileRoutesById: FileRoutesById
@@ -208,6 +220,7 @@ export interface RootRouteChildren {
   ClientOrdersRoute: typeof ClientOrdersRoute
   ClientProfileRoute: typeof ClientProfileRoute
   ClientRegisterRoute: typeof ClientRegisterRoute
+  ClientSearchRoute: typeof ClientSearchRoute
   ClientIndexRoute: typeof ClientIndexRoute
   ClientBakeryBakeryRoute: typeof ClientBakeryBakeryRoute
 }
@@ -226,6 +239,13 @@ declare module '@tanstack/react-router' {
       path: '/client'
       fullPath: '/client/'
       preLoaderRoute: typeof ClientIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client/Search': {
+      id: '/client/Search'
+      path: '/client/Search'
+      fullPath: '/client/Search'
+      preLoaderRoute: typeof ClientSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client/Register': {
@@ -328,6 +348,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientOrdersRoute: ClientOrdersRoute,
   ClientProfileRoute: ClientProfileRoute,
   ClientRegisterRoute: ClientRegisterRoute,
+  ClientSearchRoute: ClientSearchRoute,
   ClientIndexRoute: ClientIndexRoute,
   ClientBakeryBakeryRoute: ClientBakeryBakeryRoute,
 }
