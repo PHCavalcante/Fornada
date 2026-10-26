@@ -227,7 +227,6 @@ function RouteComponent() {
           className="flex shrink-0 items-center justify-between px-5 py-4 text-white"
           style={{ backgroundColor: palette.light.accent }}
         >
-          <span>{cart.bakery_id === bakeryId ? `${itemCount} ${itemCount === 1 ? 'item' : 'itens'} no carrinho` : `Carrinho de ${cart.bakery_name}`}</span>
           <span className="font-bold">Ver carrinho · {moeda.format(subtotal)}</span>
         </Link>
       )}
