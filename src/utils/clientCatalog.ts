@@ -58,8 +58,7 @@ export async function buscarPadariasAbertas(coordenadas: { lat: number; lng: num
   const padarias = (data ?? []) as unknown as Omit<PadariaPublica, 'distance_km'>[]
   return padarias
     .map((padaria) => {
-      const temPontos = coordenadas !== null && padaria.latitude !== null && padaria.longitude !== null
-      const distancia = temPontos
+      const distancia = coordenadas !== null && padaria.latitude !== null && padaria.longitude !== null
         ? distanciaEmKm(coordenadas.lat, coordenadas.lng, padaria.latitude, padaria.longitude)
         : null
       return { ...padaria, distance_km: distancia }

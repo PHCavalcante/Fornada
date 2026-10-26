@@ -1,5 +1,4 @@
 import { createRootRoute, Outlet } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { AuthProvider } from '../contexts/AuthContext'
 import { CartProvider } from '../contexts/CartContext'
 import { palette } from '../theme';
