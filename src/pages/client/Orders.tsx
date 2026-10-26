@@ -120,7 +120,7 @@ export default function Orders() {
               <span>Total a pagar</span>
               <span style={{ color: "#2E9C12" }}>{total === null ? '—' : moeda.format(total)}</span>
             </div>
-            <button className='text-white h-10 rounded-lg w-32' style={{ backgroundColor: palette.light.accent }}>Continuar</button>
+            <Link to="/client/Checkout" className='text-white text-center py-1 h-10 rounded-lg w-32' style={{ backgroundColor: palette.light.accent }}>Continuar</Link>
           </footer>
         </>
       )}
