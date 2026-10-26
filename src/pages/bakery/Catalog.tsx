@@ -11,12 +11,20 @@ import {
   type ProdutoCatalogo,
 } from '../../utils/catalog'
 import { buscarPadariaDoProprietario } from '../../utils/bakeryWorkspace'
+import logoFallback from '../../assets/logo.png'
+import {
+  BUCKET_IMAGENS_PRODUTOS,
+  enviarImagemProduto,
+  removerImagemPublica,
+  validarImagem,
+} from '../../utils/storageImages'
 
 type FormularioProduto = {
   name: string
   description: string
   price: string
   category_id: string
+  image_url: string
 }
 
 const FORMULARIO_VAZIO: FormularioProduto = {
@@ -24,6 +32,7 @@ const FORMULARIO_VAZIO: FormularioProduto = {
   description: '',
   price: '',
   category_id: '',
+  image_url: '',
 }
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -41,6 +50,18 @@ export default function Catalog() {
   const [carregando, setCarregando] = useState(true)
   const [salvando, setSalvando] = useState(false)
   const [erro, setErro] = useState<string | null>(null)
+  const [imagemProduto, setImagemProduto] = useState<File | null>(null)
+  const [imagemPreview, setImagemPreview] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!imagemProduto) {
+      setImagemPreview(null)
+      return
+    }
+    const url = URL.createObjectURL(imagemProduto)
+    setImagemPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [imagemProduto])
 
   const carregarCatalogo = useCallback(async (idPadaria: string) => {
     const dados = await buscarCatalogo(idPadaria)
@@ -102,6 +123,7 @@ export default function Catalog() {
   function abrirNovoProduto() {
     setProdutoEditado(null)
     setFormulario(FORMULARIO_VAZIO)
+    setImagemProduto(null)
     setErro(null)
     setModalAberto(true)
   }
@@ -113,7 +135,9 @@ export default function Catalog() {
       description: produto.description ?? '',
       price: String(produto.price),
       category_id: produto.category_id ?? '',
+      image_url: produto.image_url ?? '',
     })
+    setImagemProduto(null)
     setErro(null)
     setModalAberto(true)
   }
@@ -134,16 +158,36 @@ export default function Catalog() {
 
     setSalvando(true)
     setErro(null)
+    let imagemEnviada: { path: string; publicUrl: string } | null = null
+    let produtoSalvo = false
     try {
+      let imageUrl = formulario.image_url || null
+      if (imagemProduto) {
+        imagemEnviada = await enviarImagemProduto(bakeryId, imagemProduto)
+        imageUrl = imagemEnviada.publicUrl
+      }
       await salvarProduto(bakeryId, {
         name: formulario.name.trim(),
         description: formulario.description.trim() || null,
         price: preco,
         category_id: formulario.category_id || null,
+        image_url: imageUrl,
       }, produtoEditado?.id)
-      await carregarCatalogo(bakeryId)
+      produtoSalvo = true
+      setImagemProduto(null)
       setModalAberto(false)
+      if (imagemEnviada && produtoEditado?.image_url) {
+        await removerImagemPublica(BUCKET_IMAGENS_PRODUTOS, produtoEditado.image_url).catch(() => undefined)
+      }
+      try {
+        await carregarCatalogo(bakeryId)
+      } catch {
+        setErro('Produto salvo, mas não foi possível atualizar a lista. Recarregue a página para ver a alteração.')
+      }
     } catch (falha) {
+      if (imagemEnviada && !produtoSalvo) {
+        await removerImagemPublica(BUCKET_IMAGENS_PRODUTOS, imagemEnviada.publicUrl).catch(() => undefined)
+      }
       setErro(falha instanceof Error ? falha.message : 'Não foi possível salvar o produto.')
     } finally {
       setSalvando(false)
@@ -328,8 +372,37 @@ export default function Catalog() {
                   {categorias.map((categoria) => <option key={categoria.id} value={categoria.id}>{categoria.name}</option>)}
                 </select>
               </label>
+              <label className="flex flex-col gap-1 font-medium">
+                Foto do produto <span className="font-normal text-gray-500">(opcional)</span>
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={(evento) => {
+                    const arquivo = evento.currentTarget.files?.[0]
+                    if (!arquivo) return
+                    try {
+                      validarImagem(arquivo)
+                      setImagemProduto(arquivo)
+                      setErro(null)
+                      evento.currentTarget.value = ''
+                    } catch (falha) {
+                      setErro(falha instanceof Error ? falha.message : 'Arquivo de imagem inválido.')
+                      evento.currentTarget.value = ''
+                    }
+                  }}
+                  className="rounded-lg border border-gray-300 px-3 py-2 font-normal"
+                />
+                <span className="text-xs font-normal text-gray-500">JPG, PNG ou WebP, até 5 MB.</span>
+              </label>
+              {(imagemPreview || formulario.image_url) && (
+                <img
+                  src={imagemPreview || formulario.image_url}
+                  alt="Prévia da foto do produto"
+                  className="h-32 w-32 rounded-lg border object-cover"
+                />
+              )}
               <div className="mt-2 flex justify-end gap-3">
-                <button type="button" disabled={salvando} onClick={() => setModalAberto(false)} className="rounded-lg px-4 py-2 text-gray-700 disabled:opacity-50">
+                <button type="button" disabled={salvando} onClick={() => { setModalAberto(false); setImagemProduto(null) }} className="rounded-lg px-4 py-2 text-gray-700 disabled:opacity-50">
                   Cancelar
                 </button>
                 <button type="submit" disabled={salvando} className="rounded-lg px-4 py-2 font-bold text-white disabled:opacity-50" style={{ backgroundColor: palette.light.accent }}>
@@ -363,12 +436,19 @@ function GrupoProdutos({
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {produtos.map((produto) => (
           <article key={produto.id} className="rounded-lg bg-white p-4 shadow-sm">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h4 className="break-words font-bold">{produto.name}</h4>
+            <div className="flex items-start gap-3">
+              <img
+                src={produto.image_url || logoFallback}
+                alt={`Imagem de ${produto.name}`}
+                className="h-16 w-16 shrink-0 rounded-lg object-cover"
+              />
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-3">
+                  <h4 className="wrap-break-word font-bold">{produto.name}</h4>
+                  <span className="shrink-0 font-semibold">{moeda.format(produto.price)}</span>
+                </div>
                 {produto.description && <p className="mt-1 line-clamp-2 text-sm text-gray-600">{produto.description}</p>}
               </div>
-              <span className="shrink-0 font-semibold">{moeda.format(produto.price)}</span>
             </div>
             <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
               <span className={`text-sm ${produto.is_available ? 'text-green-700' : 'text-gray-500'}`}>

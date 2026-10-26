@@ -8,6 +8,12 @@ import {
   type AtualizacaoPadaria,
   type DadosPadariaGerencia,
 } from '../../utils/bakeryManagement'
+import {
+  BUCKET_IMAGENS_PADARIA,
+  enviarImagemPadaria,
+  removerImagemPublica,
+  validarImagem,
+} from '../../utils/storageImages'
 
 interface FormularioPadaria {
   name: string
@@ -118,6 +124,30 @@ export default function Management() {
   const [salvando, setSalvando] = useState(false)
   const [mensagem, setMensagem] = useState<string | null>(null)
   const [erro, setErro] = useState<string | null>(null)
+  const [logoFile, setLogoFile] = useState<File | null>(null)
+  const [coverFile, setCoverFile] = useState<File | null>(null)
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
+  const [coverPreview, setCoverPreview] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!logoFile) {
+      setLogoPreview(null)
+      return
+    }
+    const url = URL.createObjectURL(logoFile)
+    setLogoPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [logoFile])
+
+  useEffect(() => {
+    if (!coverFile) {
+      setCoverPreview(null)
+      return
+    }
+    const url = URL.createObjectURL(coverFile)
+    setCoverPreview(url)
+    return () => URL.revokeObjectURL(url)
+  }, [coverFile])
 
   const carregar = useCallback(async () => {
     if (!profile?.id) return
@@ -148,12 +178,38 @@ export default function Management() {
     setSalvando(true)
     setErro(null)
     setMensagem(null)
+    let logoEnviado: { path: string; publicUrl: string } | null = null
+    let coverEnviado: { path: string; publicUrl: string } | null = null
     try {
       const atualizacao = dadosParaSalvar(formulario)
+      if (logoFile) {
+        logoEnviado = await enviarImagemPadaria(padaria.id, 'logo', logoFile)
+        atualizacao.logo_url = logoEnviado.publicUrl
+      }
+      if (coverFile) {
+        coverEnviado = await enviarImagemPadaria(padaria.id, 'cover', coverFile)
+        atualizacao.cover_url = coverEnviado.publicUrl
+      }
       await atualizarDadosDaPadaria(profile.id, padaria.id, atualizacao)
-      setPadaria({ ...padaria, ...atualizacao })
+      const padariaAtualizada = { ...padaria, ...atualizacao }
+      setPadaria(padariaAtualizada)
+      setFormulario(paraFormulario(padariaAtualizada))
+      setLogoFile(null)
+      setCoverFile(null)
+      await Promise.all([
+        logoEnviado && padaria.logo_url
+          ? removerImagemPublica(BUCKET_IMAGENS_PADARIA, padaria.logo_url).catch(() => undefined)
+          : Promise.resolve(),
+        coverEnviado && padaria.cover_url
+          ? removerImagemPublica(BUCKET_IMAGENS_PADARIA, padaria.cover_url).catch(() => undefined)
+          : Promise.resolve(),
+      ])
       setMensagem('Dados da padaria salvos.')
     } catch (falha) {
+      await Promise.all([
+        logoEnviado ? removerImagemPublica(BUCKET_IMAGENS_PADARIA, logoEnviado.publicUrl).catch(() => undefined) : Promise.resolve(),
+        coverEnviado ? removerImagemPublica(BUCKET_IMAGENS_PADARIA, coverEnviado.publicUrl).catch(() => undefined) : Promise.resolve(),
+      ])
       const texto = falha instanceof Error ? falha.message : 'Não foi possível salvar as alterações.'
       setErro(texto.includes('duplicate key')
         ? 'CNPJ, e-mail ou telefone já está sendo usado por outra padaria.'
@@ -207,15 +263,49 @@ export default function Management() {
             </Secao>
 
             <Secao titulo="Logo e capa">
-              <p className="mb-4 text-sm text-gray-600">Informe links públicos das imagens. O envio de arquivos será habilitado após configurar o Storage.</p>
+              <p className="mb-4 text-sm text-gray-600">Envie imagens JPG, PNG ou WebP de até 5 MB.</p>
               <div className="grid gap-5 md:grid-cols-2">
-                <Campo rotulo="URL do logo">
-                  <input type="url" placeholder="https://..." value={formulario.logo_url} onChange={(e) => alterar('logo_url', e.target.value)} className={estiloInput} />
-                  {formulario.logo_url && <img src={formulario.logo_url} alt="Prévia do logo" className="mt-3 h-24 w-24 rounded-lg border object-cover" />}
+                <Campo rotulo="Logo da padaria">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(evento) => {
+                      const arquivo = evento.currentTarget.files?.[0]
+                      if (!arquivo) return
+                      try {
+                        validarImagem(arquivo)
+                        setLogoFile(arquivo)
+                        setErro(null)
+                        evento.currentTarget.value = ''
+                      } catch (falha) {
+                        setErro(falha instanceof Error ? falha.message : 'Arquivo de imagem inválido.')
+                        evento.currentTarget.value = ''
+                      }
+                    }}
+                    className={estiloInput}
+                  />
+                  {(logoPreview || formulario.logo_url) && <img src={logoPreview || formulario.logo_url} alt="Prévia do logo" className="mt-3 h-24 w-24 rounded-lg border object-cover" />}
                 </Campo>
-                <Campo rotulo="URL da capa">
-                  <input type="url" placeholder="https://..." value={formulario.cover_url} onChange={(e) => alterar('cover_url', e.target.value)} className={estiloInput} />
-                  {formulario.cover_url && <img src={formulario.cover_url} alt="Prévia da capa" className="mt-3 h-24 w-full rounded-lg border object-cover" />}
+                <Campo rotulo="Imagem de capa">
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    onChange={(evento) => {
+                      const arquivo = evento.currentTarget.files?.[0]
+                      if (!arquivo) return
+                      try {
+                        validarImagem(arquivo)
+                        setCoverFile(arquivo)
+                        setErro(null)
+                        evento.currentTarget.value = ''
+                      } catch (falha) {
+                        setErro(falha instanceof Error ? falha.message : 'Arquivo de imagem inválido.')
+                        evento.currentTarget.value = ''
+                      }
+                    }}
+                    className={estiloInput}
+                  />
+                  {(coverPreview || formulario.cover_url) && <img src={coverPreview || formulario.cover_url} alt="Prévia da capa" className="mt-3 h-24 w-full rounded-lg border object-cover" />}
                 </Campo>
               </div>
             </Secao>

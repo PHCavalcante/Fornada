@@ -23,6 +23,7 @@ export interface ProdutoInput {
   name: string
   description: string | null
   price: number
+  image_url: string | null
 }
 
 export async function buscarCatalogo(bakeryId: string) {
