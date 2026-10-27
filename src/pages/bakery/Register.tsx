@@ -9,7 +9,7 @@ import Step4Configuracoes from "../../components/forms/Step4Configuracoes.";
 import Step5Finalizacao from "../../components/forms/Step5Finalizacao";
 import { useAuth } from "../../contexts/AuthContext";
 import { CADASTRO_INICIAL, type CadastroBakery } from "../../types/bakery";
-import { cnpjDisponivel, criarBakery, padariaDoProprietarioExiste, salvarCadastroPendente, validarStep } from "../../utils/bakery";
+import { cnpjDisponivel, criarBakery, geocodificarEnderecoPadaria, padariaDoProprietarioExiste, salvarCadastroPendente, validarStep } from "../../utils/bakery";
 import { mensagemDeErro, validatePassword } from "../../utils/auth";
 
 export default function Register() {
@@ -82,6 +82,8 @@ export default function Register() {
         return;
       }
 
+      const coordenadas = await geocodificarEnderecoPadaria(form);
+
       let ownerId: string;
 
       if (ownerIdSessaoAtual) {
@@ -98,7 +100,7 @@ export default function Register() {
         // Sem sessão, o Supabase exigiu a confirmação por e-mail: os dados ficam
         // guardados e a padaria é criada no primeiro login.
         if (resultado.confirmationRequired || !resultado.session) {
-          salvarCadastroPendente(form);
+          salvarCadastroPendente(form, coordenadas);
           setEmailEnviado(true);
           setEnviando(false);
           return;
@@ -107,7 +109,7 @@ export default function Register() {
         ownerId = resultado.session.user.id;
       }
 
-      await criarBakery(ownerId, form);
+      await criarBakery(ownerId, form, coordenadas);
       navigate({ to: "/bakery/Dashboard", replace: true });
     } catch (erroCadastro) {
       setErro(mensagemDeErro(erroCadastro));

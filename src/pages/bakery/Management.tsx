@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import Menu from '../../components/Menu'
+import BakeryLocationMap from '../../components/BakeryLocationMap'
 import { useAuth } from '../../contexts/AuthContext'
 import { palette } from '../../theme'
 import {
@@ -8,6 +9,7 @@ import {
   type AtualizacaoPadaria,
   type DadosPadariaGerencia,
 } from '../../utils/bakeryManagement'
+import { geocodificarEnderecoPadaria } from '../../utils/bakery'
 import {
   BUCKET_IMAGENS_PADARIA,
   enviarImagemPadaria,
@@ -29,6 +31,8 @@ interface FormularioPadaria {
   complement: string
   neighborhood: string
   city: string
+  latitude: number | null
+  longitude: number | null
   opens_at: string
   closes_at: string
   is_open: boolean
@@ -54,6 +58,8 @@ function paraFormulario(padaria: DadosPadariaGerencia): FormularioPadaria {
     complement: padaria.complement ?? '',
     neighborhood: padaria.neighborhood,
     city: padaria.city,
+    latitude: padaria.latitude,
+    longitude: padaria.longitude,
     opens_at: padaria.opens_at?.slice(0, 5) ?? '',
     closes_at: padaria.closes_at?.slice(0, 5) ?? '',
     is_open: padaria.is_open,
@@ -105,6 +111,8 @@ function dadosParaSalvar(formulario: FormularioPadaria): AtualizacaoPadaria {
     complement: formulario.complement.trim() || null,
     neighborhood: formulario.neighborhood.trim(),
     city: formulario.city.trim(),
+    latitude: formulario.latitude,
+    longitude: formulario.longitude,
     opens_at: formulario.opens_at || null,
     closes_at: formulario.closes_at || null,
     is_open: formulario.is_open,
@@ -128,6 +136,8 @@ export default function Management() {
   const [coverFile, setCoverFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [coverPreview, setCoverPreview] = useState<string | null>(null)
+  const [localizacaoConfirmada, setLocalizacaoConfirmada] = useState(false)
+  const [localizandoEndereco, setLocalizandoEndereco] = useState(false)
 
   useEffect(() => {
     if (!logoFile) {
@@ -157,6 +167,7 @@ export default function Management() {
       const dados = await buscarDadosDaPadaria(profile.id)
       setPadaria(dados)
       setFormulario(dados ? paraFormulario(dados) : null)
+      setLocalizacaoConfirmada(Boolean(dados && dados.latitude !== null && dados.longitude !== null))
     } catch (falha) {
       setErro(falha instanceof Error ? falha.message : 'Não foi possível carregar os dados da padaria.')
     } finally {
@@ -168,7 +179,29 @@ export default function Management() {
 
   function alterar<K extends keyof FormularioPadaria>(campo: K, valor: FormularioPadaria[K]) {
     setFormulario((atual) => atual ? { ...atual, [campo]: valor } : atual)
+    if (['cep', 'street', 'adress_number', 'neighborhood', 'city'].includes(campo)) {
+      setLocalizacaoConfirmada(false)
+    }
     setMensagem(null)
+  }
+
+  function selecionarPonto(ponto: { lat: number; lng: number }) {
+    setFormulario((atual) => atual ? { ...atual, latitude: ponto.lat, longitude: ponto.lng } : atual)
+    setLocalizacaoConfirmada(true)
+    setMensagem(null)
+  }
+
+  async function localizarEndereco() {
+    if (!formulario) return
+    setLocalizandoEndereco(true)
+    setErro(null)
+    try {
+      selecionarPonto(await geocodificarEnderecoPadaria(formulario))
+    } catch (falha) {
+      setErro(falha instanceof Error ? falha.message : 'Não foi possível localizar o endereço.')
+    } finally {
+      setLocalizandoEndereco(false)
+    }
   }
 
   async function salvar(evento: FormEvent<HTMLFormElement>) {
@@ -181,6 +214,9 @@ export default function Management() {
     let logoEnviado: { path: string; publicUrl: string } | null = null
     let coverEnviado: { path: string; publicUrl: string } | null = null
     try {
+      if (!localizacaoConfirmada || formulario.latitude === null || formulario.longitude === null) {
+        throw new Error('Localize o endereço ou selecione o ponto da padaria no mapa antes de salvar.')
+      }
       const atualizacao = dadosParaSalvar(formulario)
       if (logoFile) {
         logoEnviado = await enviarImagemPadaria(padaria.id, 'logo', logoFile)
@@ -330,6 +366,35 @@ export default function Management() {
                 <Campo rotulo="Bairro" obrigatório>
                   <input required value={formulario.neighborhood} onChange={(e) => alterar('neighborhood', e.target.value)} className={estiloInput} />
                 </Campo>
+              </div>
+              <div className="mt-6">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-semibold">Localização no mapa</h3>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {localizacaoConfirmada
+                        ? 'Arraste o marcador ou toque no mapa para ajustar o ponto.'
+                        : 'Localize o endereço ou toque no mapa para posicionar a padaria.'}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => void localizarEndereco()}
+                    disabled={localizandoEndereco}
+                    className="rounded-lg border border-amber-800 px-4 py-2 text-sm font-semibold text-amber-900 disabled:opacity-50"
+                  >
+                    {localizandoEndereco ? 'Localizando...' : 'Localizar pelo endereço'}
+                  </button>
+                </div>
+                <BakeryLocationMap
+                  ponto={formulario.latitude !== null && formulario.longitude !== null
+                    ? { lat: formulario.latitude, lng: formulario.longitude }
+                    : null}
+                  aoSelecionar={selecionarPonto}
+                />
+                {formulario.latitude !== null && formulario.longitude !== null && (
+                  <p className="mt-2 text-xs text-gray-500">Ponto selecionado. Os números das coordenadas são salvos automaticamente.</p>
+                )}
               </div>
             </Secao>
 

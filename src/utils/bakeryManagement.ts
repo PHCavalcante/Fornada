@@ -16,6 +16,8 @@ export interface DadosPadariaGerencia {
   complement: string | null
   neighborhood: string
   city: string
+  latitude: number | null
+  longitude: number | null
   opens_at: string | null
   closes_at: string | null
   is_open: boolean
@@ -35,6 +37,7 @@ export async function buscarDadosDaPadaria(ownerId: string) {
       id, owner_id, name, cnpj, email, phone_or_whatsapp, description,
       logo_url, cover_url, cep, street, adress_number, complement,
       neighborhood, city, opens_at, closes_at, is_open,
+      latitude, longitude,
       delivery_radius_km, estimated_delivery_minutes, pix_key,
       min_order_value, delivery_fee
     `)

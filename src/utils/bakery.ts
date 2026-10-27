@@ -3,6 +3,8 @@ import { supabase } from './supabase'
 import { validatePassword } from './auth'
 
 const CHAVE_PENDENTE = 'tcc:cadastro-padaria-pendente'
+let filaNominatim: Promise<void> = Promise.resolve()
+let ultimaConsultaNominatim = 0
 
 function soDigitos(valor: string) {
   return valor.replace(/\D/g, '')
@@ -78,7 +80,12 @@ export async function padariaDoProprietarioExiste(ownerId: string): Promise<bool
   return data !== null
 }
 
-export async function criarBakery(ownerId: string, form: CadastroBakery) {
+export async function criarBakery(
+  ownerId: string,
+  form: CadastroBakery,
+  coordenadasInformadas?: { lat: number; lng: number },
+) {
+  const coordenadas = coordenadasInformadas ?? await geocodificarEnderecoPadaria(form)
   const { data, error } = await supabase
     .from('bakeries')
     .insert({
@@ -94,6 +101,8 @@ export async function criarBakery(ownerId: string, form: CadastroBakery) {
       complement: form.complement.trim() || null,
       neighborhood: form.neighborhood.trim(),
       city: form.city.trim(),
+      latitude: coordenadas.lat,
+      longitude: coordenadas.lng,
       opens_at: paraHorario(form.opens_at),
       closes_at: paraHorario(form.closes_at),
       delivery_radius_km: paraNumero(form.delivery_radius_km),
@@ -113,21 +122,74 @@ export async function criarBakery(ownerId: string, form: CadastroBakery) {
   return data
 }
 
+export async function geocodificarEnderecoPadaria(form: Pick<CadastroBakery, 'cep' | 'street' | 'adress_number' | 'neighborhood' | 'city'>) {
+  const consulta = [
+    `${form.street.trim()} ${form.adress_number.trim()}`,
+    form.neighborhood.trim(),
+    form.city.trim(),
+    soDigitos(form.cep),
+    'Brasil',
+  ].filter(Boolean).join(', ')
+  const url = new URL('https://nominatim.openstreetmap.org/search')
+  url.search = new URLSearchParams({
+    q: consulta,
+    format: 'jsonv2',
+    limit: '1',
+    countrycodes: 'br',
+    'accept-language': 'pt-BR',
+  }).toString()
+
+  const consultaAnterior = filaNominatim
+  let liberarConsulta!: () => void
+  filaNominatim = new Promise<void>((resolve) => { liberarConsulta = resolve })
+  await consultaAnterior
+  const intervalo = 1000 - (Date.now() - ultimaConsultaNominatim)
+  if (intervalo > 0) await new Promise((resolve) => window.setTimeout(resolve, intervalo))
+
+  let resposta: Response
+  try {
+    ultimaConsultaNominatim = Date.now()
+    resposta = await fetch(url, { headers: { Accept: 'application/json' } })
+  } finally {
+    liberarConsulta()
+  }
+  if (!resposta.ok) throw new Error('Não foi possível localizar o endereço da padaria. Confira os dados e tente novamente.')
+  const resultados: unknown = await resposta.json()
+  if (!Array.isArray(resultados) || resultados.length === 0) {
+    throw new Error('Não encontramos esse endereço no mapa. Confira rua, número, bairro e cidade.')
+  }
+
+  const latitude = Number(resultados[0]?.lat)
+  const longitude = Number(resultados[0]?.lon)
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
+    throw new Error('O mapa retornou uma localização inválida. Confira o endereço e tente novamente.')
+  }
+  return { lat: latitude, lng: longitude }
+}
+
 /**
  * Quando o Supabase exige confirmação de e-mail, não há sessão para cadastrar a padaria.
  * Guardamos os dados (sem a senha) para concluir o cadastro no primeiro login.
  */
-export function salvarCadastroPendente(form: CadastroBakery) {
+export function salvarCadastroPendente(form: CadastroBakery, coordenadas: { lat: number; lng: number }) {
   const { password: _password, confirmPassword: _confirmPassword, ...dados } = form
-  localStorage.setItem(CHAVE_PENDENTE, JSON.stringify(dados))
+  localStorage.setItem(CHAVE_PENDENTE, JSON.stringify({ dados, coordenadas }))
 }
 
-export function lerCadastroPendente(): Omit<CadastroBakery, 'password' | 'confirmPassword'> | null {
+export function lerCadastroPendente(): {
+  dados: Omit<CadastroBakery, 'password' | 'confirmPassword'>
+  coordenadas: { lat: number; lng: number } | null
+} | null {
   const bruto = localStorage.getItem(CHAVE_PENDENTE)
   if (!bruto) return null
 
   try {
-    return JSON.parse(bruto)
+    const salvo = JSON.parse(bruto)
+    if (salvo?.dados && typeof salvo.dados === 'object') {
+      return { dados: salvo.dados, coordenadas: salvo.coordenadas ?? null }
+    }
+    // Compatibilidade com cadastros pendentes salvos antes da geocodificação.
+    return { dados: salvo, coordenadas: null }
   } catch {
     localStorage.removeItem(CHAVE_PENDENTE)
     return null
@@ -140,10 +202,10 @@ export function limparCadastroPendente() {
 
 /** Usa o cadastro guardado no wizard para criar a padaria depois da confirmação de e-mail. */
 export async function concluirCadastroPendente(ownerId: string) {
-  const dados = lerCadastroPendente()
-  if (!dados) return false
+  const pendente = lerCadastroPendente()
+  if (!pendente) return false
 
-  await criarBakery(ownerId, { ...dados, password: '', confirmPassword: '' })
+  await criarBakery(ownerId, { ...pendente.dados, password: '', confirmPassword: '' }, pendente.coordenadas ?? undefined)
   limparCadastroPendente()
   return true
 }
