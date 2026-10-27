@@ -1,7 +1,5 @@
 import logo from "../../assets/logo.png";
 import { palette } from "../../theme";
-import Separator from "../../components/Separator";
-import googleIcon from "../../assets/google_icon.svg";
 import { useState, type FormEvent } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "../../contexts/AuthContext";
@@ -9,7 +7,7 @@ import { mensagemDeErro, validatePassword } from "../../utils/auth";
 
 export default function Register() {
   const navigate = useNavigate();
-  const { signUp, loginWithGoogle } = useAuth();
+  const { signUp } = useAuth();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,24 +50,12 @@ export default function Register() {
     }
   }
 
-  async function cadastrarComGoogle() {
-    setErro(null);
-    setEnviando(true);
-
-    try {
-      await loginWithGoogle(`${window.location.origin}/client/`);
-    } catch (erroCadastro) {
-      setErro(mensagemDeErro(erroCadastro));
-      setEnviando(false);
-    }
-  }
-
   return (
     <div className="flex flex-col h-full items-center px-9.5">
       <div className="flex flex-col mt-9.5 items-center">
         <img src={logo} alt="Logo" className="select-none" draggable={false} />
         <span className="text-xl" style={{ color: palette.light.accent }}>
-          {"Placeholder"}
+          {"Fornada"}
         </span>
       </div>
       <h1 className="text-2xl font-bold mt-10">Crie sua conta</h1>
@@ -151,17 +137,7 @@ export default function Register() {
               {enviando ? "Criando conta..." : "Criar Conta"}
             </button>
           </form>
-          <Separator />
-          <button
-            type="button"
-            disabled={enviando}
-            className="flex mt-10 mb-20 items-center justify-center gap-3.75 w-80 h-12 rounded-lg border border-gray-500 disabled:opacity-60"
-            onClick={cadastrarComGoogle}
-          >
-            <img src={googleIcon} alt="Login com o Google" />
-            Entrar com Google
-          </button>
-          <div className="mt-4 text-sm">
+          <div className="mt-8 text-sm">
             <span className="text-gray-600">Já possui conta? </span>
             <Link to="/client/Login" className="font-semibold" viewTransition>
               Faça login

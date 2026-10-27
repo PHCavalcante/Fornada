@@ -6,7 +6,6 @@ import { palette } from '../theme'
 import { concluirCadastroPendente } from '../utils/bakery'
 import {
   fetchProfile,
-  signInWithGoogle,
   signInWithPassword,
   signOut as supabaseSignOut,
   signUp as supabaseSignUp,
@@ -23,7 +22,6 @@ interface AuthContextType {
   loading: boolean
   signIn: (email: string, password: string) => Promise<Profile>
   signUp: (input: SignUpInput) => Promise<SignUpResult>
-  loginWithGoogle: (redirectTo: string) => Promise<void>
   signOut: () => Promise<void>
   updateProfile: (patch: ProfileUpdate) => Promise<void>
 }
@@ -124,8 +122,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [aplicarSessao],
   )
 
-  const loginWithGoogle = useCallback((redirectTo: string) => signInWithGoogle(redirectTo), [])
-
   const signOut = useCallback(async () => {
     await supabaseSignOut()
     await aplicarSessao(null)
@@ -146,7 +142,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signIn,
         signUp,
-        loginWithGoogle,
         signOut,
         updateProfile,
       }}

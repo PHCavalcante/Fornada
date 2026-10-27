@@ -84,14 +84,6 @@ export async function signUp({ email, password, role, fullName, phone }: SignUpI
   return { session: data.session, confirmationRequired: data.session === null }
 }
 
-export async function signInWithGoogle(redirectTo: string): Promise<void> {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo },
-  })
-  if (error) throw new AuthError(traduzirErro(error.message))
-}
-
 export async function updateProfile(patch: ProfileUpdate): Promise<Profile> {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new AuthError('Sessão expirada. Faça login novamente.')

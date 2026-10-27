@@ -7,7 +7,6 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    // Necessário para o callback do Google OAuth (sessão chega no fragmento da URL).
     detectSessionInUrl: true,
   },
 })
