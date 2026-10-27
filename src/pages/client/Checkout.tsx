@@ -53,7 +53,7 @@ export default function Checkout() {
 
     return (
         <div className="flex h-full min-h-0 flex-col">
-            <ClientHeader title="Checkout" />
+            <ClientHeader title="Checkout" backTo="/client/Orders" />
 
             <main className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
                 <div className="mx-auto flex w-full max-w-xl flex-col gap-5">
