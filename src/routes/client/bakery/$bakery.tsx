@@ -80,46 +80,48 @@ function RouteComponent() {
   const semCategoria = produtos.filter((produto) => !categorias.some((categoria) => categoria.id === produto.category_id))
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#fffaf5]">
       <div className="relative shrink-0">
         <ClientHeader title="" turnAbsolute={true} />
-        <div className="h-36 w-full bg-amber-100 sm:h-48">
+        <div className="h-36 w-full bg-gradient-to-br from-amber-100 via-orange-100 to-amber-200 sm:h-48">
           {padaria?.cover_url && <img src={padaria.cover_url} alt="" className="h-full w-full object-cover" />}
         </div>
         {padaria?.logo_url && (
-          <img src={padaria.logo_url ?? "https://files.catbox.moe/bkdtqw.png"} alt="" className="absolute -bottom-6 left-1/2 h-20 w-20 -translate-x-1/2 rounded-full" />
+          <img src={padaria.logo_url ?? "https://files.catbox.moe/bkdtqw.png"} alt="" className="absolute -bottom-7 left-1/2 h-20 w-20 -translate-x-1/2 rounded-full border-4 border-white bg-white object-cover shadow-md" />
         )}
       </div>
 
-      <main className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
+      <main className="min-h-0 flex-1 overflow-y-auto px-5 pb-6 pt-4">
         {carregando ? (
-          <p className="py-14 text-center text-gray-600">Carregando catálogo...</p>
+          <p className="mx-auto mt-8 max-w-lg rounded-2xl bg-white px-5 py-10 text-center text-gray-600 shadow-sm ring-1 ring-orange-100">Carregando catálogo...</p>
         ) : erro ? (
-          <p role="alert" className="py-12 text-center text-red-700">{erro}</p>
+          <p role="alert" className="mx-auto mt-8 max-w-lg rounded-2xl border border-red-100 bg-red-50 px-5 py-8 text-center text-red-700">{erro}</p>
         ) : !padaria ? (
-          <p className="py-12 text-center text-gray-600">Esta padaria não foi encontrada.</p>
+          <p className="mx-auto mt-8 max-w-lg rounded-2xl bg-white px-5 py-8 text-center text-gray-600 shadow-sm ring-1 ring-orange-100">Esta padaria não foi encontrada.</p>
         ) : (
           <>
-            <header className={`pt-8 text-center ${padaria.logo_url ? 'mt-4' : ''}`}>
-              <h1 className="text-xl font-bold">{padaria.name}</h1>
-              <p className="mt-1 text-sm text-gray-600">
+            <header className={`rounded-3xl border border-orange-100 bg-white px-4 pb-5 pt-8 text-center shadow-sm ${padaria.logo_url ? 'mt-4' : ''}`}>
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">{padaria.name}</h1>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-5 text-gray-600">
                 {padaria.street}, {padaria.adress_number} · {padaria.neighborhood}, {padaria.city}
               </p>
               {padaria.rating_count > 0 && (
-                <p className="mt-2 text-sm text-gray-600">★ {Number(padaria.avg_rating).toFixed(1)} ({padaria.rating_count} avaliações)</p>
+                <p className="mx-auto mt-3 inline-flex rounded-full bg-amber-50 px-3 py-1 text-sm font-semibold text-amber-900">★ {Number(padaria.avg_rating).toFixed(1)} <span className="ml-1 font-normal text-amber-800">({padaria.rating_count} avaliações)</span></p>
               )}
-              {!padaria.is_open && <p className="mt-2 font-semibold text-red-700">Fechada no momento</p>}
-              {padaria.description && <p className="mx-auto mt-3 max-w-lg text-sm text-gray-600">{padaria.description}</p>}
+              <p className={`mx-auto mt-3 w-fit rounded-full px-3 py-1 text-xs font-semibold ${padaria.is_open ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>
+                {padaria.is_open ? 'Aberta agora' : 'Fechada no momento'}
+              </p>
+              {padaria.description && <p className="mx-auto mt-3 max-w-lg text-sm leading-6 text-gray-600">{padaria.description}</p>}
             </header>
 
             {produtos.length === 0 ? (
-              <p className="py-12 text-center text-gray-600">Esta padaria ainda não possui produtos disponíveis.</p>
+              <p className="mt-6 rounded-2xl border border-dashed border-orange-200 bg-white px-5 py-10 text-center text-gray-600">Esta padaria ainda não possui produtos disponíveis.</p>
             ) : (
-              <div className="mx-auto mt-8 flex max-w-3xl flex-col gap-8">
+              <div className="mx-auto mt-7 flex max-w-3xl flex-col gap-7">
                 {grupos.map(({ categoria, produtos: produtosDaCategoria }) => produtosDaCategoria.length > 0 && (
                   <section key={categoria.id}>
-                    <h2 className="mb-3 text-lg font-bold">{categoria.name}</h2>
-                    <div className="flex gap-3">
+                    <h2 className="mb-3 border-l-4 border-orange-400 pl-3 text-lg font-bold text-gray-900">{categoria.name}</h2>
+                    <div className="flex gap-3 overflow-x-auto pb-2">
                       {produtosDaCategoria.map((produto) => (
                         <ProdutoCard key={produto.id} produto={produto} imagemFallback={padaria.logo_url} aoSelecionar={abrirProduto} />
                       ))}
@@ -128,7 +130,7 @@ function RouteComponent() {
                 ))}
                 {semCategoria.length > 0 && (
                   <section>
-                    <h2 className="mb-3 text-lg font-bold">Outros produtos</h2>
+                    <h2 className="mb-3 border-l-4 border-orange-400 pl-3 text-lg font-bold text-gray-900">Outros produtos</h2>
                     <div className="flex flex-col gap-3">
                       {semCategoria.map((produto) => (
                         <ProdutoCard key={produto.id} produto={produto} imagemFallback={padaria.logo_url} aoSelecionar={abrirProduto} />
@@ -143,7 +145,7 @@ function RouteComponent() {
       </main>
 
       {avisoCarrinho && (
-        <p role="status" className="fixed bottom-20 left-1/2 z-20 w-[90%] max-w-md -translate-x-1/2 rounded-lg bg-zinc-900 px-4 py-3 text-center text-sm text-white shadow-lg">
+        <p role="status" className="fixed bottom-20 left-1/2 z-20 w-[90%] max-w-md -translate-x-1/2 rounded-2xl bg-gray-900 px-4 py-3 text-center text-sm text-white shadow-xl">
           {avisoCarrinho}
         </p>
       )}
@@ -159,25 +161,25 @@ function RouteComponent() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="titulo-detalhe-produto"
-            className="relative flex h-full max-h-full w-full max-w-none flex-col overflow-hidden rounded-none bg-white"
+            className="relative flex h-full max-h-full w-full max-w-none flex-col overflow-hidden rounded-none bg-[#fffaf5]"
           >
             <button
               type="button"
               onClick={() => setProdutoSelecionado(null)}
               aria-label="Fechar detalhes do produto"
-              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/90 text-2xl shadow"
+              className="absolute right-4 top-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/95 text-2xl shadow-lg ring-1 ring-black/5"
             >
               ×
             </button>
             <img
               src={produtoSelecionado.image_url || padaria.cover_url || padaria.logo_url || placeholderProduto}
               alt={produtoSelecionado.name}
-              className="h-[45dvh] min-h-64 w-full shrink-0 bg-amber-50 object-cover"
+              className="h-[45dvh] min-h-64 w-full shrink-0 bg-orange-50 object-cover"
             />
             <div className="flex min-h-0 flex-1 flex-col overflow-y-auto p-5">
-              <h2 id="titulo-detalhe-produto" className="text-xl font-bold">{produtoSelecionado.name}</h2>
-              {produtoSelecionado.description && <p className="mt-2 text-sm text-gray-600">{produtoSelecionado.description}</p>}
-              <p className="mt-4 text-lg font-bold">{moeda.format(Number(produtoSelecionado.price))}</p>
+              <h2 id="titulo-detalhe-produto" className="text-2xl font-bold tracking-tight text-gray-900">{produtoSelecionado.name}</h2>
+              {produtoSelecionado.description && <p className="mt-2 text-sm leading-6 text-gray-600">{produtoSelecionado.description}</p>}
+              <p className="mt-4 text-xl font-bold" style={{ color: palette.light.accent }}>{moeda.format(Number(produtoSelecionado.price))}</p>
 
               <div className="mt-auto pt-8">
                 <div className="mb-4 flex items-center justify-between">
@@ -187,14 +189,14 @@ function RouteComponent() {
                       type="button"
                       onClick={() => setQuantidade((atual) => Math.max(1, atual - 1))}
                       aria-label="Diminuir quantidade"
-                      className="h-9 w-9 rounded-full border text-lg"
+                      className="h-10 w-10 rounded-full border border-orange-200 bg-white text-lg font-semibold text-gray-800 hover:bg-orange-50"
                     >−</button>
                     <span aria-live="polite" className="min-w-5 text-center">{quantidade}</span>
                     <button
                       type="button"
                       onClick={() => setQuantidade((atual) => atual + 1)}
                       aria-label="Aumentar quantidade"
-                      className="h-9 w-9 rounded-full border text-lg"
+                      className="h-10 w-10 rounded-full border border-orange-200 bg-white text-lg font-semibold text-gray-800 hover:bg-orange-50"
                     >+</button>
                   </div>
                 </div>
@@ -209,7 +211,7 @@ function RouteComponent() {
                   type="button"
                   disabled={!padaria.is_open}
                   onClick={() => adicionarAoCarrinho(produtoSelecionado)}
-                  className="flex w-full items-center justify-between rounded-lg px-4 py-3 font-semibold text-white disabled:opacity-50"
+                  className="flex w-full items-center justify-between rounded-2xl px-4 py-3.5 font-semibold text-white shadow-sm transition hover:brightness-95 disabled:opacity-50"
                   style={{ backgroundColor: palette.light.accent }}
                 >
                   <span>Adicionar ao pedido</span>
@@ -224,7 +226,7 @@ function RouteComponent() {
       {itemCount > 0 && cart && (
         <Link
           to="/client/Cart"
-          className="flex shrink-0 items-center justify-between px-5 py-4 text-white"
+          className="flex shrink-0 items-center justify-between border-t border-orange-100 px-5 py-4 text-white shadow-[0_-8px_24px_rgba(95,55,20,0.1)]"
           style={{ backgroundColor: palette.light.accent }}
         >
           <span className="font-bold">Ver carrinho · {moeda.format(subtotal)}</span>
@@ -247,15 +249,15 @@ function ProdutoCard({
     <button
       type="button"
       onClick={() => aoSelecionar(produto)}
-      className="flex flex-col items-center"
+      className="min-w-36 max-w-40 shrink-0 rounded-2xl border border-orange-100 bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-500"
     >
       <img
         src={produto.image_url || imagemFallback || placeholderProduto}
         alt=""
-        className="h-20 w-20 shrink-0 rounded-lg bg-amber-50 object-cover"
+        className="h-28 w-full shrink-0 rounded-xl bg-orange-50 object-cover"
       />
-      <span className="min-w-0 flex-1">
-        <span className="block font-semibold">{produto.name}</span>
+        <span className="min-w-0 flex-1 pt-2">
+        <span className="block line-clamp-2 font-semibold leading-5 text-gray-900">{produto.name}</span>
         {/* {produto.description && <span className="mt-1 line-clamp-2 block text-sm text-gray-600">{produto.description}</span>} */}
         {/* <span className="mt-2 block font-bold">{moeda.format(Number(produto.price))}</span> */}
       </span>

@@ -39,75 +39,75 @@ export default function Orders() {
   const total = deliveryFee === null ? null : subtotal + deliveryFee
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col bg-[#fffaf5]">
       <ClientHeader title="Pedidos" showClearButton={itemCount > 0} onClear={limparCarrinho} />
       {!cart || cart.items.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <h2 className="text-lg font-semibold">Seu pedido está vazio</h2>
-          <p className="mt-2 text-sm text-gray-600">Escolha uma padaria e adicione produtos para montar seu pedido.</p>
-          <Link to="/" className="mt-5 rounded-lg px-5 py-3 font-semibold text-white" style={{ backgroundColor: palette.light.accent }}>
+          <h2 className="text-xl font-bold tracking-tight text-gray-900">Seu pedido está vazio</h2>
+          <p className="mt-2 max-w-sm text-sm leading-6 text-gray-600">Escolha uma padaria e adicione produtos para montar seu pedido.</p>
+          <Link to="/" className="mt-5 rounded-xl px-5 py-3 font-semibold text-white shadow-sm transition hover:brightness-95" style={{ backgroundColor: palette.light.accent }}>
             Explorar padarias
           </Link>
         </div>
       ) : (
         <>
           <main className="min-h-0 flex flex-col flex-1 overflow-y-auto px-5 pb-5">
-            <div className="mb-4 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-3 rounded-2xl border border-orange-100 bg-white p-3 shadow-sm">
               <img
                 src={cart.bakery_logo_url || logoPadariaFallback}
                 alt={`Logo da padaria ${cart.bakery_name}`}
-                className="h-10 w-10 shrink-0 rounded-full object-cover"
+                className="h-12 w-12 shrink-0 rounded-full border-2 border-orange-50 object-cover"
               />
-              <h2 className="min-w-0 flex-1 truncate font-bold">{cart.bakery_name}</h2>
-              <Link to="/client/bakery/$bakery" params={{ bakery: cart.bakery_id }} className="text-sm underline">
+              <h2 className="min-w-0 flex-1 truncate font-bold text-gray-900">{cart.bakery_name}</h2>
+              <Link to="/client/bakery/$bakery" params={{ bakery: cart.bakery_id }} className="rounded-lg px-2 py-1 text-sm font-semibold underline underline-offset-4" style={{ color: palette.light.accent }}>
                 Ver cardápio
               </Link>
             </div>
-            <p className='mt-28'>Itens Adicionados</p>
+            <p className="mb-3 mt-7 text-lg font-bold tracking-tight text-gray-900">Itens Adicionados</p>
             <div className="flex flex-col gap-3">
               {cart.items.map((item) => (
-                <article key={item.product_id} className="flex items-center gap-3">
+                <article key={item.product_id} className="flex items-center gap-3 rounded-2xl border border-orange-100 bg-white p-3 shadow-sm">
                   <img
                     src={item.image_url || produtoImagemFallback}
                     alt={`Imagem de ${item.name}`}
-                    className="h-16 w-16 shrink-0 rounded-lg object-cover"
+                    className="h-16 w-16 shrink-0 rounded-xl bg-orange-50 object-cover"
                   />
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate">{item.name}</h3>
+                    <h3 className="truncate font-semibold text-gray-900">{item.name}</h3>
                     {item.description && (
                       <p className="mt-1 line-clamp-2 text-sm text-gray-600">{item.description}</p>
                     )}
-                    <p className="mt-1 font-semibold" style={{ color: "#2E9C12" }}>{moeda.format(item.unit_price * item.quantity)}</p>
+                    <p className="mt-1 font-semibold" style={{ color: palette.light.accent }}>{moeda.format(item.unit_price * item.quantity)}</p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2 rounded-full bg-orange-50 p-1">
                     <button
                       type="button"
                       onClick={() => alterarQuantidade(item.product_id, item.quantity - 1)}
                       aria-label={`Diminuir quantidade de ${item.name}`}
-                      className="h-8 w-8 rounded-full"
+                      className="h-8 w-8 rounded-full bg-white text-lg shadow-sm transition hover:bg-orange-100"
                       style={{ color: palette.light.accent}}
                     >−</button>
-                    <span className="min-w-5 text-center">{item.quantity}</span>
+                    <span className="min-w-5 text-center text-sm font-semibold text-gray-800">{item.quantity}</span>
                     <button
                       type="button"
                       onClick={() => alterarQuantidade(item.product_id, item.quantity + 1)}
                       aria-label={`Aumentar quantidade de ${item.name}`}
-                      className="h-8 w-8 rounded-full"
+                      className="h-8 w-8 rounded-full bg-white text-lg shadow-sm transition hover:bg-orange-100"
                       style={{ color: palette.light.accent}}
                     >+</button>
                   </div>
                 </article>
               ))}
             </div>
-            <div className="flex flex-col px-5 my-auto">
-            <span className="font-bold mb-1">Resumo dos valores</span>
+            <div className="my-auto flex flex-col rounded-2xl border border-orange-100 bg-white px-4 py-4 shadow-sm">
+            <span className="mb-3 font-bold text-gray-900">Resumo dos valores</span>
             <div className="flex space-between justify-between w-full">
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2 text-sm">
                 <span className="text-gray-500">Subtotal ({itemCount} {itemCount === 1 ? 'item' : 'itens'})</span>
                 <span className="text-gray-500">Taxa de entrega</span>
                 <span className='font-medium'>Total</span>
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-2 text-right text-sm">
                 <span className="text-gray-500">{moeda.format(subtotal)}</span>
                 <span className="text-gray-500">{deliveryFee === null ? '—' : moeda.format(deliveryFee)}</span>
                 <span className='font-medium'>{total === null ? '—' : moeda.format(total)}</span>
@@ -115,12 +115,12 @@ export default function Orders() {
             </div>
           </div>
           </main>
-          <footer className="flex items-center justify-between px-5">
-            <div className="flex flex-col px-5 my-auto">
-              <span>Total a pagar</span>
-              <span style={{ color: "#2E9C12" }}>{total === null ? '—' : moeda.format(total)}</span>
+          <footer className="flex items-center justify-between gap-4 px-5 py-3">
+            <div className="my-auto flex min-w-0 flex-col px-2">
+              <span className="text-xs font-medium text-gray-500">Total a pagar</span>
+              <span className="truncate text-lg font-bold" style={{ color: palette.light.accent }}>{total === null ? '—' : moeda.format(total)}</span>
             </div>
-            <Link to="/client/Checkout" className='text-white text-center py-1 h-10 rounded-lg w-32' style={{ backgroundColor: palette.light.accent }}>Continuar</Link>
+            <Link to="/client/Checkout" className="flex h-11 w-36 shrink-0 items-center justify-center rounded-xl px-4 font-semibold text-white shadow-sm transition hover:brightness-95" style={{ backgroundColor: palette.light.accent }}>Continuar</Link>
           </footer>
         </>
       )}
