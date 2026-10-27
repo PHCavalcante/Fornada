@@ -20,7 +20,7 @@ const rotulosStatus: Record<StatusPedido, string> = {
 }
 
 const rotulosPagamento = {
-  pix: 'Pix',
+  pix: 'Pix (simulado)',
   cash: 'Dinheiro',
   credit_card: 'Cartão de crédito',
   debit_card: 'Cartão de débito',

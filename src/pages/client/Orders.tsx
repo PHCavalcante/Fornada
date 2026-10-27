@@ -3,16 +3,21 @@ import { useEffect, useState } from 'react'
 import ClientHeader from '../../components/ClientHeader'
 import ClientMenu from '../../components/ClientMenu'
 import { useCart } from '../../contexts/CartContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { palette } from '../../theme'
 import logoPadariaFallback from '../../assets/logo.png'
 import produtoImagemFallback from '../../assets/logo.png'
 import { supabase } from '../../utils/supabase'
+import { buscarPedidosRecentesDoCliente } from '../../utils/customerOrders'
+import type { StatusPedido } from '../../utils/bakeryOrders'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function Orders() {
   const { cart, itemCount, subtotal, alterarQuantidade, limparCarrinho } = useCart()
+  const { profile } = useAuth()
   const [deliveryFee, setDeliveryFee] = useState<number | null>(null)
+  const [pedidosRecentes, setPedidosRecentes] = useState<Awaited<ReturnType<typeof buscarPedidosRecentesDoCliente>>>([])
 
   useEffect(() => {
     let ativo = true
@@ -38,17 +43,51 @@ export default function Orders() {
 
   const total = deliveryFee === null ? null : subtotal + deliveryFee
 
+  useEffect(() => {
+    if (!profile?.id) return
+    let ativo = true
+    buscarPedidosRecentesDoCliente(profile.id)
+      .then((pedidos) => { if (ativo) setPedidosRecentes(pedidos) })
+      .catch(() => { if (ativo) setPedidosRecentes([]) })
+    return () => { ativo = false }
+  }, [profile?.id])
+
+  const historico = pedidosRecentes.length > 0 && (
+    <section className="mx-auto mt-6 w-full max-w-xl rounded-2xl border border-orange-100 bg-white p-4 shadow-sm">
+      <h2 className="mb-3 font-bold text-gray-900">Pedidos recentes</h2>
+      <ul className="flex flex-col divide-y divide-gray-100">
+        {pedidosRecentes.map((pedido) => (
+          <li key={pedido.id}>
+            <Link to="/client/TrackOrder" search={{ orderId: pedido.id }} className="flex items-center justify-between gap-3 py-3 first:pt-1 last:pb-1">
+              <span className="min-w-0">
+                <span className="block truncate font-semibold text-gray-800">{pedido.bakery_name}</span>
+                <span className="mt-1 block text-xs text-gray-500">#{pedido.id.slice(0, 8).toUpperCase()} · {formatarData(pedido.created_at)}</span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block font-semibold">{moeda.format(pedido.total)}</span>
+                <span className={`mt-1 block text-xs font-medium ${pedido.status === 'cancelled' ? 'text-red-700' : 'text-amber-800'}`}>{rotuloStatus(pedido.status)}</span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+
   return (
     <div className="flex h-full min-h-0 flex-col bg-[#fffaf5]">
       <ClientHeader title="Pedidos" showClearButton={itemCount > 0} onClear={limparCarrinho} />
       {!cart || cart.items.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center px-6 text-center">
-          <h2 className="text-xl font-bold tracking-tight text-gray-900">Seu pedido está vazio</h2>
-          <p className="mt-2 max-w-sm text-sm leading-6 text-gray-600">Escolha uma padaria e adicione produtos para montar seu pedido.</p>
-          <Link to="/" className="mt-5 rounded-xl px-5 py-3 font-semibold text-white shadow-sm transition hover:brightness-95" style={{ backgroundColor: palette.light.accent }}>
-            Explorar padarias
-          </Link>
-        </div>
+        <main className="min-h-0 flex-1 overflow-y-auto px-5 pb-6">
+          <div className="flex min-h-[55%] flex-col items-center justify-center text-center">
+            <h2 className="text-xl font-bold tracking-tight text-gray-900">Seu pedido está vazio</h2>
+            <p className="mt-2 max-w-sm text-sm leading-6 text-gray-600">Escolha uma padaria e adicione produtos para montar seu pedido.</p>
+            <Link to="/" className="mt-5 rounded-xl px-5 py-3 font-semibold text-white shadow-sm transition hover:brightness-95" style={{ backgroundColor: palette.light.accent }}>
+              Explorar padarias
+            </Link>
+          </div>
+          {historico}
+        </main>
       ) : (
         <>
           <main className="min-h-0 flex flex-col flex-1 overflow-y-auto px-5 pb-5">
@@ -114,6 +153,7 @@ export default function Orders() {
               </div>
             </div>
           </div>
+            {historico}
           </main>
           <footer className="flex items-center justify-between gap-4 px-5 py-3">
             <div className="my-auto flex min-w-0 flex-col px-2">
@@ -127,4 +167,20 @@ export default function Orders() {
       <ClientMenu />
     </div>
   )
+}
+
+function formatarData(valor: string) {
+  return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(new Date(valor))
+}
+
+function rotuloStatus(status: StatusPedido) {
+  const rotulos: Record<StatusPedido, string> = {
+    pending: 'Aguardando confirmação',
+    confirmed: 'Confirmado',
+    preparing: 'Em preparo',
+    out_for_delivery: 'Saiu para entrega',
+    delivered: 'Entregue',
+    cancelled: 'Cancelado',
+  }
+  return rotulos[status]
 }

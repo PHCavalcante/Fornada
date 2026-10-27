@@ -1,20 +1,26 @@
 import { useEffect, useState } from 'react'
-import { Link } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import ClientHeader from '../../components/ClientHeader'
 import location from '../../assets/location.svg'
 import logoPadariaFallback from '../../assets/logo.png'
 import { useCart } from '../../contexts/CartContext'
+import { useAuth } from '../../contexts/AuthContext'
 import { palette } from '../../theme'
 import { useLocalizacao } from '../../utils/GetLocation'
+import { criarPedidoSimulado } from '../../utils/customerOrders'
 import { supabase } from '../../utils/supabase'
 
 const moeda = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
 
 export default function Checkout() {
-    const { cart, itemCount, subtotal } = useCart()
-    const { enderecoCompleto } = useLocalizacao()
+    const navigate = useNavigate()
+    const { cart, itemCount, subtotal, limparCarrinho } = useCart()
+    const { profile } = useAuth()
+    const { coordenadas, enderecoCompleto, erro: erroLocalizacao, carregando: carregandoLocalizacao, pegarLocalizacao } = useLocalizacao()
     const [deliveryFee, setDeliveryFee] = useState<number | null>(null)
     const [confirmacaoAberta, setConfirmacaoAberta] = useState(false)
+    const [enviandoPedido, setEnviandoPedido] = useState(false)
+    const [erroPedido, setErroPedido] = useState<string | null>(null)
 
     useEffect(() => {
         let ativo = true
@@ -39,6 +45,32 @@ export default function Checkout() {
     }, [cart?.bakery_id])
 
     const total = deliveryFee === null ? null : subtotal + deliveryFee
+
+    async function fazerPedido() {
+        if (!cart || !profile?.id || !coordenadas) {
+            setErroPedido(!coordenadas
+                ? 'Para registrar o pedido, informe sua localização pelo GPS.'
+                : 'Entre na sua conta de cliente para continuar.')
+            return
+        }
+        setEnviandoPedido(true)
+        setErroPedido(null)
+        try {
+            const orderId = await criarPedidoSimulado({
+                bakeryId: cart.bakery_id,
+                items: cart.items,
+                coordinates: coordenadas,
+                deliveryAddress: enderecoCompleto ?? `${coordenadas.lat.toFixed(5)}, ${coordenadas.lng.toFixed(5)}`,
+            })
+            limparCarrinho()
+            setConfirmacaoAberta(false)
+            await navigate({ to: '/client/TrackOrder', search: { orderId } })
+        } catch (falha) {
+            setErroPedido(falha instanceof Error ? falha.message : 'Não foi possível registrar o pedido. Tente novamente.')
+        } finally {
+            setEnviandoPedido(false)
+        }
+    }
 
     useEffect(() => {
         if (!confirmacaoAberta) return
@@ -86,12 +118,19 @@ export default function Checkout() {
                             </p>
                             <button
                                 type="button"
+                                onClick={() => { setErroPedido(null); void pegarLocalizacao() }}
+                                disabled={carregandoLocalizacao}
                                 className="shrink-0 rounded-lg px-2 py-1 text-sm font-semibold focus-visible:outline-2 focus-visible:outline-offset-2"
                                 style={{ color: palette.light.accent }}
                             >
-                                Trocar
+                                {carregandoLocalizacao ? 'Obtendo...' : 'Usar GPS'}
                             </button>
                         </div>
+                        {(!coordenadas || erroLocalizacao) && (
+                            <p className="mt-2 text-sm text-amber-800" role="status">
+                                {erroLocalizacao ?? 'O pedido precisa das coordenadas do GPS. O CEP sozinho não informa um ponto exato.'}
+                            </p>
+                        )}
                     </section>
 
                     <section>
@@ -133,7 +172,7 @@ export default function Checkout() {
                             <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-xs font-bold text-emerald-800" aria-hidden="true">PIX</span>
                             <div className="min-w-0 flex-1">
                                 <p className="font-semibold">Pagamento via Pix</p>
-                                <p className="mt-1 text-sm text-gray-500">Pagamento à vista</p>
+                                <p className="mt-1 text-sm text-gray-500">Simulação; nenhum pagamento será processado</p>
                             </div>
                             <span className="font-semibold">
                                 {total === null ? '—' : moeda.format(total)}
@@ -179,7 +218,7 @@ export default function Checkout() {
                     <button
                         type="button"
                         onClick={() => setConfirmacaoAberta(true)}
-                        disabled={!cart || itemCount === 0 || total === null}
+                        disabled={!cart || itemCount === 0 || total === null || enviandoPedido}
                         className="h-11 min-w-36 rounded-xl px-6 font-semibold text-white shadow-sm transition hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         style={{ backgroundColor: palette.light.accent, outlineColor: palette.light.accent }}
                     >
@@ -190,7 +229,7 @@ export default function Checkout() {
 
             {confirmacaoAberta && (
                 <div
-                    className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-5"
+                    className="dialog-backdrop fixed inset-0 z-50 flex items-end justify-center bg-black/50 p-0 sm:items-center sm:p-5"
                     onMouseDown={(evento) => {
                         if (evento.target === evento.currentTarget) setConfirmacaoAberta(false)
                     }}
@@ -199,7 +238,7 @@ export default function Checkout() {
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="titulo-confirmacao-pedido"
-                        className="w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl"
+                        className="dialog-panel w-full max-w-md rounded-t-3xl bg-white p-6 shadow-2xl sm:rounded-3xl"
                     >
                         <div className="mb-5 flex items-start justify-between gap-4">
                             <div>
@@ -227,24 +266,28 @@ export default function Checkout() {
                             <div className="border-t border-amber-200" />
                             <div className="flex items-center justify-between gap-4">
                                 <div>
-                                    <p className="font-semibold">Pix</p>
-                                    <p className="text-sm text-gray-500">Forma de pagamento</p>
+                                    <p className="font-semibold">Pix (simulação)</p>
+                                    <p className="text-sm text-gray-500">Nenhuma cobrança será realizada</p>
                                 </div>
                                 <span className="shrink-0 font-semibold">{total === null ? '—' : moeda.format(total)}</span>
                             </div>
                         </div>
 
                         <div className="mt-6 flex flex-col gap-3">
-                            <Link
-                                to="/client/TrackOrder"
-                                className="flex h-12 items-center justify-center rounded-xl px-5 font-semibold text-white"
+                            {erroPedido && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-800">{erroPedido}</p>}
+                            <button
+                                type="button"
+                                onClick={() => void fazerPedido()}
+                                disabled={enviandoPedido || !coordenadas}
+                                className="flex h-12 items-center justify-center rounded-xl px-5 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
                                 style={{ backgroundColor: palette.light.accent }}
                             >
-                                Fazer pedido
-                            </Link>
+                                {enviandoPedido ? 'Registrando pedido...' : 'Fazer pedido'}
+                            </button>
                             <button
                                 type="button"
                                 onClick={() => setConfirmacaoAberta(false)}
+                                disabled={enviandoPedido}
                                 className="h-11 rounded-xl border border-gray-200 font-semibold text-gray-700 hover:bg-gray-50"
                             >
                                 Alterar pedido
