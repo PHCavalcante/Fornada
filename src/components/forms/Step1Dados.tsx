@@ -3,7 +3,7 @@ import { PASSWORD_MIN_LENGTH } from "../../utils/auth";
 
 export default function Step1Dados({ form, update }: StepProps) {
     return (
-        <div className="flex flex-col gap-4 mt-6">
+        <div className="mt-6 flex w-full flex-col gap-4">
            <div className="flex flex-col">
           <label htmlFor="name">Nome da padaria</label>
           <input
@@ -12,7 +12,7 @@ export default function Step1Dados({ form, update }: StepProps) {
             type="text"
             value={form.name}
             onChange={(e) => update("name", e.target.value)}
-            className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+            className="h-10 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
          <div className="flex flex-col">
@@ -23,7 +23,7 @@ export default function Step1Dados({ form, update }: StepProps) {
             type="tel"
             value={form.phone}
             onChange={(e) => update("phone", e.target.value)}
-            className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+            className="h-10 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
          <div className="flex flex-col">
@@ -36,7 +36,7 @@ export default function Step1Dados({ form, update }: StepProps) {
             placeholder="00.000.000/0000-00"
             value={form.cnpj}
             onChange={(e) => update("cnpj", e.target.value)}
-            className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+            className="h-10 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
         <div className="flex flex-col">
@@ -48,7 +48,7 @@ export default function Step1Dados({ form, update }: StepProps) {
             autoComplete="email"
             value={form.email}
             onChange={(e) => update("email", e.target.value)}
-            className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+            className="h-10 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
         <div className="flex flex-col">
@@ -61,7 +61,7 @@ export default function Step1Dados({ form, update }: StepProps) {
             minLength={PASSWORD_MIN_LENGTH}
             value={form.password}
             onChange={(e) => update("password", e.target.value)}
-            className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+            className="h-10 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
         <div className="flex flex-col">
@@ -74,7 +74,7 @@ export default function Step1Dados({ form, update }: StepProps) {
             minLength={PASSWORD_MIN_LENGTH}
             value={form.confirmPassword}
             onChange={(e) => update("confirmPassword", e.target.value)}
-            className="w-80 h-10 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+            className="h-10 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
           />
         </div>
       </div>

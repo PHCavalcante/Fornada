@@ -256,10 +256,10 @@ export default function Management() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-full min-h-0 overflow-hidden">
       <Menu />
-      <main className="flex h-screen min-h-0 w-full flex-col overflow-y-auto px-6 pb-10 overscroll-contain sm:ml-8 sm:px-10 lg:ml-14.75 lg:mr-14.75">
-        <header className="mt-10">
+      <main className="min-h-0 min-w-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-24 sm:px-6 lg:px-10 lg:pb-10">
+        <header className="mt-6 sm:mt-10">
           <h1 className="text-3xl font-bold" style={{ color: palette.light.accent }}>Gerência</h1>
           <p className="mt-2 text-gray-600">Atualize os dados que aparecem para seus clientes.</p>
         </header>

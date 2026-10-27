@@ -214,10 +214,10 @@ export default function Catalog() {
   const semCategoria = produtos.filter((produto) => !categorias.some((categoria) => categoria.id === produto.category_id))
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-full min-h-0 overflow-hidden">
       <Menu />
-      <main className="flex w-full flex-col px-6 pb-10 sm:ml-8 sm:px-10 lg:ml-14.75 lg:mr-14.75">
-        <header className="mt-10 flex flex-wrap items-center justify-between gap-4">
+      <main className="min-w-0 flex-1 overflow-y-auto px-4 pb-24 sm:px-6 lg:px-10 lg:pb-10">
+        <header className="mt-6 flex flex-wrap items-center justify-between gap-4 sm:mt-10">
           <div>
             <h1 className="text-3xl font-bold" style={{ color: palette.light.accent }}>Catálogo</h1>
             {bakeryName && <p className="mt-1 text-gray-600">{bakeryName}</p>}
@@ -324,7 +324,7 @@ export default function Catalog() {
             if (evento.target === evento.currentTarget && !salvando) setModalAberto(false)
           }}
         >
-          <section role="dialog" aria-modal="true" aria-labelledby="titulo-form-produto" className="dialog-panel my-auto w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+          <section role="dialog" aria-modal="true" aria-labelledby="titulo-form-produto" className="dialog-panel my-auto max-h-[calc(100dvh-2rem)] w-full max-w-lg overflow-y-auto rounded-xl bg-white p-4 shadow-xl sm:p-6">
             <h2 id="titulo-form-produto" className="text-xl font-bold">
               {produtoEditado ? 'Editar produto' : 'Novo produto'}
             </h2>

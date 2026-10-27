@@ -2,9 +2,9 @@ import type { StepProps } from "./types";
 
 export default function Step3Entrega({ form, update }: StepProps) {
     return (
-        <div className="flex flex-col gap-4 mt-6">
-            <div className="flex gap-4 items-center">
-                <div className="flex flex-col">
+        <div className="mt-6 flex w-full min-w-0 flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
+                <div className="flex min-w-0 flex-col">
                     <label htmlFor="opens_at">Abre as</label>
                     <input
                         id="opens_at"
@@ -12,10 +12,10 @@ export default function Step3Entrega({ form, update }: StepProps) {
                         type="time"
                         value={form.opens_at}
                         onChange={(e) => update("opens_at", e.target.value)}
-                        className="w-22 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                        className="h-12 w-full min-w-0 rounded-lg border border-black px-2 focus:outline-none focus:ring-2 sm:px-4"
                     />
                 </div>
-                <div className="flex flex-col">
+                <div className="flex min-w-0 flex-col">
                     <label htmlFor="closes_at">Fecha as</label>
                     <input
                         id="closes_at"
@@ -23,12 +23,12 @@ export default function Step3Entrega({ form, update }: StepProps) {
                         type="time"
                         value={form.closes_at}
                         onChange={(e) => update("closes_at", e.target.value)}
-                        className="w-22 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                        className="h-12 w-full min-w-0 rounded-lg border border-black px-2 focus:outline-none focus:ring-2 sm:px-4"
                     />
                 </div>
             </div>
-            <div className="flex gap-4">
-                <div className="flex flex-col">
+            <div className="grid grid-cols-2 gap-3">
+                <div className="flex min-w-0 flex-col">
                     <label htmlFor="delivery_radius_km">Raio entrega (Km)</label>
                     <input
                         id="delivery_radius_km"
@@ -38,10 +38,10 @@ export default function Step3Entrega({ form, update }: StepProps) {
                         placeholder="5"
                         value={form.delivery_radius_km}
                         onChange={(e) => update("delivery_radius_km", e.target.value)}
-                        className="w-22 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                        className="h-12 w-full min-w-0 rounded-lg border border-black px-2 focus:outline-none focus:ring-2 sm:px-4"
                     />
                 </div>
-                <div className="flex flex-col">
+                <div className="flex min-w-0 flex-col">
                     <label htmlFor="estimated_delivery_minutes">Tempo de entrega (min)</label>
                     <input
                         id="estimated_delivery_minutes"
@@ -51,12 +51,12 @@ export default function Step3Entrega({ form, update }: StepProps) {
                         placeholder="40"
                         value={form.estimated_delivery_minutes}
                         onChange={(e) => update("estimated_delivery_minutes", e.target.value)}
-                        className="w-20 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                        className="h-12 w-full min-w-0 rounded-lg border border-black px-2 focus:outline-none focus:ring-2 sm:px-4"
                     />
                 </div>
             </div>
-            <div className="flex gap-4">
-                <div className="flex flex-col">
+            <div className="grid grid-cols-2 gap-3">
+                <div className="flex min-w-0 flex-col">
                     <label htmlFor="min_order_value">Pedido mínimo (R$)</label>
                     <input
                         id="min_order_value"
@@ -66,10 +66,10 @@ export default function Step3Entrega({ form, update }: StepProps) {
                         placeholder="0,00"
                         value={form.min_order_value}
                         onChange={(e) => update("min_order_value", e.target.value)}
-                        className="w-40 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                        className="h-12 w-full min-w-0 rounded-lg border border-black px-2 focus:outline-none focus:ring-2 sm:px-4"
                     />
                 </div>
-                <div className="flex flex-col">
+                <div className="flex min-w-0 flex-col">
                     <label htmlFor="delivery_fee">Taxa de entrega (R$)</label>
                     <input
                         id="delivery_fee"
@@ -79,7 +79,7 @@ export default function Step3Entrega({ form, update }: StepProps) {
                         placeholder="0,00"
                         value={form.delivery_fee}
                         onChange={(e) => update("delivery_fee", e.target.value)}
-                        className="w-40 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                        className="h-12 w-full min-w-0 rounded-lg border border-black px-2 focus:outline-none focus:ring-2 sm:px-4"
                     />
                 </div>
             </div>

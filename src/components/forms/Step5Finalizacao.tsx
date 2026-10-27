@@ -2,14 +2,14 @@ import type { StepProps } from "./types";
 
 export default function Step5Finalizacao({ form, update }: StepProps) {
     return (
-        <div className="flex flex-col gap-4 mt-6">
+        <div className="mt-6 flex w-full flex-col gap-4">
             <div className="flex flex-col">
                 <label htmlFor="logoDaPadaria">Logo da padaria</label>
                 <input
                     id="logoDaPadaria"
                     name="logoDaPadaria"
                     type="file"
-                    className="w-80 h-12 rounded-lg bg-black text-white px-4 py-2"
+                    className="h-12 w-full min-w-0 rounded-lg bg-black px-2 py-2 text-white sm:px-4"
                     title="Selecione o arquivo de logo da padaria"
                     accept="image/*"
                     disabled
@@ -24,7 +24,7 @@ export default function Step5Finalizacao({ form, update }: StepProps) {
                     id="bannerDaPadaria"
                     name="bannerDaPadaria"
                     type="file"
-                    className="w-80 h-12 rounded-lg bg-black text-white px-4 py-2"
+                    className="h-12 w-full min-w-0 rounded-lg bg-black px-2 py-2 text-white sm:px-4"
                     title="Selecione o arquivo de banner da padaria"
                     accept="image/*"
                     disabled
@@ -38,7 +38,7 @@ export default function Step5Finalizacao({ form, update }: StepProps) {
                     type="text"
                     value={form.description}
                     onChange={(e) => update("description", e.target.value)}
-                    className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                    className="h-12 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
                 />
             </div>
         </div>

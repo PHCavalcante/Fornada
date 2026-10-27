@@ -51,8 +51,8 @@ export default function Register() {
   }
 
   return (
-    <div className="flex flex-col h-full items-center px-9.5">
-      <div className="flex flex-col mt-9.5 items-center">
+    <div className="flex h-full flex-col items-center overflow-y-auto px-4 pb-8 sm:px-8">
+      <div className="mt-6 flex flex-col items-center sm:mt-9.5">
         <img src={logo} alt="Logo" className="select-none" draggable={false} />
         <span className="text-xl" style={{ color: palette.light.accent }}>
           {"Fornada"}
@@ -61,7 +61,7 @@ export default function Register() {
       <h1 className="text-2xl font-bold mt-10">Crie sua conta</h1>
 
       {emailEnviado ? (
-        <div className="flex flex-col items-center mt-10 text-center">
+        <div className="mt-10 flex w-full max-w-80 flex-col items-center text-center">
           <p className="font-semibold">Confira seu e-mail</p>
           <p className="text-gray-600 mt-2.5">
             Enviamos um link de confirmação para {email}. Depois de confirmar, você já pode entrar.
@@ -72,7 +72,7 @@ export default function Register() {
         </div>
       ) : (
         <>
-          <form className="flex flex-col gap-4 mt-6" onSubmit={cadastrar}>
+          <form className="mt-6 flex w-full max-w-80 flex-col gap-4" onSubmit={cadastrar}>
             <div className="flex flex-col">
               <label htmlFor="fullName">Nome completo</label>
               <input
@@ -83,7 +83,7 @@ export default function Register() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                className="h-12 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2 focus:ring-amber-200"
               />
             </div>
             <div className="flex flex-col">
@@ -96,7 +96,7 @@ export default function Register() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2 focus:ring-amber-200"
+                className="h-12 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2 focus:ring-amber-200"
               />
             </div>
             <div className="flex flex-col">
@@ -110,7 +110,7 @@ export default function Register() {
                 minLength={6}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                className="h-12 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
               />
             </div>
             <div className="flex flex-col">
@@ -124,14 +124,14 @@ export default function Register() {
                 minLength={6}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-80 h-12 rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
+                className="h-12 w-full rounded-lg border border-black px-4 focus:outline-none focus:ring-2"
               />
             </div>
             {erro && <p className="text-red-600 text-sm text-center">{erro}</p>}
             <button
               type="submit"
               disabled={enviando}
-              className="w-80 h-12 text-white rounded-lg mt-2 hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="mt-2 h-12 w-full rounded-lg text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
               style={{ backgroundColor: palette.light.accent }}
             >
               {enviando ? "Criando conta..." : "Criar Conta"}

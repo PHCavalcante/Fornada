@@ -57,10 +57,10 @@ export default function Dashboard() {
   ] : []
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-full min-h-0 overflow-hidden">
       <Menu />
-      <main className="flex w-full flex-col px-6 pb-10 sm:ml-8 sm:px-10 lg:ml-14.75">
-        <header className="mt-10 flex flex-wrap items-center justify-between gap-4">
+      <main className="min-w-0 flex-1 overflow-y-auto px-4 pb-24 sm:px-6 lg:px-10 lg:pb-10">
+        <header className="mt-6 flex flex-wrap items-center justify-between gap-4 sm:mt-10">
           <div>
             <h1 className="text-3xl font-bold" style={{ color: palette.light.accent }}>Dashboard</h1>
             {resumo && <p className="mt-1 text-gray-600">{resumo.padariaNome}</p>}

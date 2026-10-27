@@ -8,7 +8,7 @@ const RootLayout = () => (
     <CartProvider>
       <div style={{
         backgroundColor: palette.light.background,
-        height: '100vh',
+        height: '100dvh',
       }}>
         <Outlet />
         {/* <TanStackRouterDevtools /> */}

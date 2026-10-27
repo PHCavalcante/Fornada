@@ -119,15 +119,15 @@ export default function Register() {
 
   if (emailEnviado) {
     return (
-      <div className="flex flex-col h-full items-center px-9.5 text-center">
-        <div className="flex flex-col mt-9.5 items-center">
+      <div className="flex h-full flex-col items-center overflow-y-auto px-4 pb-8 text-center sm:px-8">
+        <div className="mt-6 flex flex-col items-center sm:mt-9.5">
           <img src={logo} alt="Logo" className="select-none" draggable={false} />
           <span className="text-xl" style={{ color: palette.light.accent }}>
             {"Placeholder"}
           </span>
         </div>
         <h1 className="text-2xl font-bold mt-10">Confira seu e-mail</h1>
-        <p className="text-gray-600 mt-2.5 max-w-80">
+        <p className="mt-2.5 w-full max-w-80 text-gray-600">
           Enviamos um link de confirmação para {form.email}. Depois de confirmar, entre em
           {" "}
           <Link to="/bakery/Login" className="font-semibold underline" viewTransition>
@@ -140,8 +140,8 @@ export default function Register() {
   }
 
   return (
-    <div className="flex flex-col h-full items-center px-9.5 overflow-y-auto pb-6">
-      <div className="flex flex-col mt-9.5 items-center">
+    <div className="flex h-full flex-col items-center overflow-y-auto px-4 pb-6 sm:px-8">
+      <div className="mt-6 flex flex-col items-center sm:mt-9.5">
         <img src={logo} alt="Logo" className="select-none" draggable={false} />
         <span className="text-xl" style={{ color: palette.light.accent }}>
           {"Placeholder"}
@@ -169,15 +169,17 @@ export default function Register() {
           </div>
         ))}
       </div>
-      <StepAtual form={form} update={update} />
+      <div className="w-full max-w-80">
+        <StepAtual form={form} update={update} />
+      </div>
       {erro && <p className="text-red-600 text-sm text-center mt-4">{erro}</p>}
-      <div className="flex gap-4 mt-6">
+      <div className="mt-6 flex w-full max-w-80 gap-3">
         {currentStep > 0 && (
           <button
             type="button"
             disabled={enviando}
             onClick={voltar}
-            className="w-40 h-10 rounded-lg border border-black disabled:opacity-60"
+            className="h-10 min-w-0 flex-1 rounded-lg border border-black disabled:opacity-60"
           >
             Voltar
           </button>
@@ -185,7 +187,7 @@ export default function Register() {
         <button
           type="button"
           disabled={enviando}
-          className="w-80 h-10 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          className="h-10 min-w-0 flex-1 rounded-lg text-white transition-colors hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-60"
           style={{ backgroundColor: palette.light.accent }}
           onClick={avancar}
         >
