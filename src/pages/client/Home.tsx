@@ -137,7 +137,7 @@ export default function Home() {
 
       {detalhesLocalizacaoAbertos && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5"
+          className="dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-5"
           onMouseDown={(evento) => {
             if (evento.target === evento.currentTarget) setDetalhesLocalizacaoAbertos(false);
           }}
@@ -146,7 +146,7 @@ export default function Home() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="titulo-detalhes-localizacao"
-            className="w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl ring-1 ring-orange-100"
+            className="dialog-panel w-full max-w-sm rounded-3xl bg-white p-6 text-center shadow-2xl ring-1 ring-orange-100"
           >
             <h2 id="titulo-detalhes-localizacao" className="text-xl font-bold text-gray-900">
               Sua localização

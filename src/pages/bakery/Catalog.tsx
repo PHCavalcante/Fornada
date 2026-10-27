@@ -319,12 +319,12 @@ export default function Catalog() {
 
       {modalAberto && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4"
+          className="dialog-backdrop fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/40 p-4"
           onMouseDown={(evento) => {
             if (evento.target === evento.currentTarget && !salvando) setModalAberto(false)
           }}
         >
-          <section role="dialog" aria-modal="true" aria-labelledby="titulo-form-produto" className="my-auto w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
+          <section role="dialog" aria-modal="true" aria-labelledby="titulo-form-produto" className="dialog-panel my-auto w-full max-w-lg rounded-xl bg-white p-6 shadow-xl">
             <h2 id="titulo-form-produto" className="text-xl font-bold">
               {produtoEditado ? 'Editar produto' : 'Novo produto'}
             </h2>
